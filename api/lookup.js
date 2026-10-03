@@ -11,8 +11,8 @@ export default async function handler(req,res){
     if(!base)return res.status(500).json({error:"server_not_configured"});
 
     const path=kind==="aadhar"
-      ? String(process.env.BOTH_DB_AADHAAR_PATH||"/aadhar=")
-      : String(process.env.BOTH_DB_NUMBER_PATH||"/number=");
+      ? String(process.env.BOTH_DB_AADHAAR_PATH||"")
+      : String(process.env.BOTH_DB_NUMBER_PATH||"");
 
     const target=path.endsWith("=")
       ? base+path+encodeURIComponent(value)

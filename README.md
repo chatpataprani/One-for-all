@@ -29,3 +29,6 @@ python3 -m http.server 8080
 ```
 
 Open the local server in a browser and use the app normally.
+
+
+Build: reproducible static/PWA build via GitHub Actions.

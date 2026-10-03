@@ -104,7 +104,7 @@ data class Tool(val name:String,val description:String,val path:String,val enabl
         Tool("Aadhaar UIDAI Verification","Use the supplied Aadhaar verification workflow when its required UIDAI verification flow is available.","__search_aadhaar__",true)
     )
 
-class KotlinMainActivity : ComponentActivity() {
+open class KotlinMainActivity : ComponentActivity() {
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
         enableEdgeToEdge()

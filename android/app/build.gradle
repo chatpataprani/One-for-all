@@ -4,6 +4,10 @@ android {
     namespace 'com.chatpataprani.hao'
     compileSdk 35
 
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId 'com.chatpataprani.hao'
         minSdk 23

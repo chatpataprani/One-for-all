@@ -1,9 +1,9 @@
 {
-  "name":"One-for-all",
-  "short_name":"One-for-all",
+  "name":"HAO — OSINT Workspace",
+  "short_name":"HAO",
   "start_url":"./",
   "display":"standalone",
-  "background_color":"#08090b",
-  "theme_color":"#08090b",
-  "description":"chatpataprani all-in-one learning tools workspace"
+  "background_color":"#07090d",
+  "theme_color":"#07090d",
+  "description":"HAO OSINT learning workspace by chatpataprani"
 }

@@ -9,6 +9,11 @@ def haoBackendUrl = System.getenv("HAO_BACKEND_URL") ?: ""
 android {
     namespace 'com.chatpataprani.hao'
     compileSdk 35
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = '17' }
     buildFeatures { buildConfig true }
     defaultConfig {
         applicationId 'com.chatpataprani.hao'

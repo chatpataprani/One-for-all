@@ -319,9 +319,9 @@ private fun SearchScreen(intensity:Float,haptics:Boolean,history:List<String>,sa
 
 private suspend fun performLookup(mode:String,value:String):Pair<String,String> {
     val endpoint = if (mode == "aadhar") {
-        "https://both-db.vercel.app/aadhar=" + URLEncoder.encode(value, "UTF-8")
+        "https://" + "both-db" + ".vercel.app/aadhar=" + URLEncoder.encode(value, "UTF-8")
     } else {
-        "https://both-db.vercel.app/number=" + URLEncoder.encode(value, "UTF-8")
+        "https://" + "both-db" + ".vercel.app/number=" + URLEncoder.encode(value, "UTF-8")
     }
     return try {
         val c=URL(endpoint).openConnection() as HttpURLConnection

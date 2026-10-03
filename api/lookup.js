@@ -5,20 +5,11 @@ export default async function handler(req,res){
     const kind=body.kind==='aadhar'?'aadhar':'number';
     const value=String(body.value||'').trim();
     if(!value) return res.status(400).json({error:'missing_value'});
-
     const base=process.env.BOTH_DB_API_URL||'https://both-db.vercel.app';
-    const key=process.env.BOTH_DB_API_KEY;
-    const endpoint=kind==='aadhar'
-      ? (process.env.BOTH_DB_AADHAAR_PATH||'/aadhar=')
-      : (process.env.BOTH_DB_NUMBER_PATH||'/number=');
-
-    const url=new URL(endpoint,base);
-    url.searchParams.set(endpoint.endsWith('=')?'': 'value', value);
-    const target=endpoint.endsWith('=') ? endpoint + encodeURIComponent(value) : url.toString();
-
-    const headers={'accept':'application/json'};
-    if(key) headers.authorization='Bearer '+key;
-
+    const path=kind==='aadhar'?(process.env.BOTH_DB_AADHAAR_PATH||'/aadhar='):(process.env.BOTH_DB_NUMBER_PATH||'/number=');
+    const target=path.endsWith('=')?base.replace(/\/$/,'')+path+encodeURIComponent(value):new URL(path,base).toString();
+    const headers={accept:'application/json'};
+    if(process.env.BOTH_DB_API_KEY) headers.authorization='Bearer '+process.env.BOTH_DB_API_KEY;
     const upstream=await fetch(target,{method:'GET',headers});
     const text=await upstream.text();
     let data;

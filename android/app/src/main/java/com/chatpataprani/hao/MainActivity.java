@@ -149,7 +149,7 @@ public class MainActivity extends Activity {
         }catch(Exception e){return null;}
     }
 
-    void configureWebView(WebView w){WebSettings s=w.getSettings();s.setJavaScriptEnabled(true);s.setDomStorageEnabled(true);s.setAllowFileAccess(true);s.setAllowContentAccess(true);s.setBuiltInZoomControls(false);s.setDisplayZoomControls(false);w.setWebViewClient(new WebViewClient());w.setWebChromeClient(new WebChromeClient());}
+    void configureWebView(WebView w){WebSettings s=w.getSettings();s.setJavaScriptEnabled(true);s.setDomStorageEnabled(true);s.setAllowFileAccess(true);s.setAllowContentAccess(true);s.setAllowFileAccessFromFileURLs(true);s.setAllowUniversalAccessFromFileURLs(true);s.setBuiltInZoomControls(false);s.setDisplayZoomControls(false);w.setWebViewClient(new WebViewClient());w.setWebChromeClient(new WebChromeClient());}
 
     @Override public void onBackPressed(){if(screen==2&&toolsWeb!=null&&toolsWeb.canGoBack()){toolsWeb.goBack();return;}if(screen!=0){showHome();return;}super.onBackPressed();}
 

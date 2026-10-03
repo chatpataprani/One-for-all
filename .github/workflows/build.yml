@@ -1,4 +1,4 @@
-name: Build One-for-all
+name: Build HAO
 on:
   push:
     branches: [main]
@@ -11,9 +11,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm run build
-      - run: cd dist && zip -r ../one-for-all-build.zip .
+      - run: node --check app.js
+      - run: node --check api/lookup.js
+      - run: node --check server.mjs
+      - run: mkdir -p build/api
+      - run: cp index.html app.js styles.css package.json server.mjs vercel.json README.md build/
+      - run: cp api/lookup.js build/api/
+      - run: cd build && zip -r ../hao-api-search.zip .
       - uses: actions/upload-artifact@v4
         with:
-          name: one-for-all-build
-          path: one-for-all-build.zip
+          name: hao-api-search
+          path: hao-api-search.zip

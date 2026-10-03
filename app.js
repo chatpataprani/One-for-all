@@ -7,5 +7,45 @@ function filterTools(q){q=q.toLowerCase();drawTools(tools.filter(x=>x[1].toLower
 function toolUrl(path){return './public/punjab/'+path+'/index.html';}
 function openTool(path){const t=tools.find(x=>x[2]===path);document.querySelector('#viewer').innerHTML='<div class="card"><h2>'+esc(t?.[1]||path)+'</h2><p class="muted">If the bundled page is not present in your deployment, this opens the original static source.</p><div class="iframe-wrap"><iframe title="tool" src="'+toolUrl(path)+'"></iframe></div></div>';document.querySelector('#viewer').scrollIntoView({behavior:'smooth'});}
 function showDb(){document.querySelector('#viewer').innerHTML='<div class="card"><div class="eyebrow">Both-db direct API</div><h2>Number & Aadhaar Lookup</h2><p class="muted">These buttons call the supplied Both-db endpoints directly and render the returned JSON as a readable card.</p><div class="lookup-grid"><div class="lookup-box"><span class="lookup-icon">📞</span><h3>Number Lookup</h3><p class="muted">Calls <code>https://both-db.vercel.app/number=</code></p><input id="numberValue" value="TEST-0001" placeholder="synthetic number"><button class="primary lookup-btn" id="numberRun">Number Lookup</button></div><div class="lookup-box"><span class="lookup-icon">🪪</span><h3>Aadhaar Lookup</h3><p class="muted">Calls <code>https://both-db.vercel.app/aadhar=</code></p><input id="aadharValue" value="TEST-0001" placeholder="synthetic Aadhaar"><button class="primary lookup-btn" id="aadharRun">Aadhaar Lookup</button></div></div><div id="dbResult" class="result-card"><div class="result-empty">Choose a lookup button to view the returned data.</div></div></div>';document.querySelector('#numberRun').onclick=()=>runDirectLookup('number');document.querySelector('#aadharRun').onclick=()=>runDirectLookup('aadhar');document.querySelector('#viewer').scrollIntoView({behavior:'smooth'});}
-async function runLookup(){const value=document.querySelector('#dbValue').value.trim();const kind=document.querySelector('.chip.active')?.dataset.kind||'number';const out=document.querySelector('#dbResult');if(!value){out.textContent='Enter a synthetic test value.';return}out.textContent='Loading…';try{const r=await fetch('/api/lookup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind,value})});const data=await r.json();out.textContent=JSON.stringify(data,null,2);}catch(e){out.textContent=JSON.stringify({status:'mock',message:'API adapter is not deployed yet.',query:{kind,value}},null,2);}}
+function displayValue(v){return v===null||v===undefined||v===''?'—':String(v)}
+function resultField(label,value,wide=false){return '<div class="result-item'+(wide?' field-wide':'')+'"><span>'+esc(label)+'</span><strong>'+esc(displayValue(value))+'</strong></div>'}
+function renderLookupResult(out,data,kind,value,status){
+  const results=Array.isArray(data?.results)?data.results:[];
+  const query=data?.number??data?.aadhar??value;
+  const state=data?.status==='success'?'success':'response';
+  const source='modihh ji';
+  const cards=results.map((item,i)=>'<article class="match-card"><div class="match-header"><div><span class="match-number">MATCH '+String(i+1).padStart(2,'0')+'</span><h3>'+esc(displayValue(item.name))+'</h3></div><span class="source-pill">'+source+'</span></div><div class="field-grid">'+
+    resultField('Father / Spouse',item.fathersName)+
+    resultField('Phone',item.phoneNumber)+
+    resultField('Aadhaar',item.aadharNumber)+
+    resultField('Other Number',item.otherNumber)+
+    resultField('District',item.district)+
+    resultField('Pincode',item.pincode)+
+    resultField('State',item.state)+
+    resultField('Town',item.town)+
+    resultField('Address',item.address,true)+
+    resultField('Source',source)+
+    '</div></article>').join('');
+  out.innerHTML='<div class="lookup-summary"><div><span class="result-badge">'+esc(String(kind).toUpperCase())+'</span><h3>Lookup result</h3><p>Query: <code>'+esc(query)+'</code></p></div><div class="summary-stats"><div><b>'+esc(data?.count??results.length)+'</b><span>matches</span></div><div><b>'+esc(data?.lookup_ms??'—')+(data?.lookup_ms!=null?' ms':'')+'</b><span>lookup time</span></div><div><b>'+esc(data?.credits_used??'—')+'</b><span>credits</span></div></div></div>'+
+    '<div class="result-meta"><span class="success-dot"></span>'+esc(state)+' · HTTP '+status+' · developer: '+esc(data?.developer??'—')+' · source: '+source+'</div>'+
+    (cards||'<div class="result-empty">No matching records returned.</div>')+
+    '<details class="raw-json"><summary>View raw JSON</summary><pre>'+esc(JSON.stringify(data,null,2))+'</pre></details>';
+}
+async function runDirectLookup(kind){
+  const input=document.querySelector(kind==='number'?'#numberValue':'#aadharValue');
+  const out=document.querySelector('#dbResult');
+  const value=input.value.trim();
+  if(!value){out.innerHTML='<div class="result-error">Enter a synthetic test value first.</div>';return}
+  const endpoint=kind==='number'?'https://both-db.vercel.app/number=':'https://both-db.vercel.app/aadhar=';
+  out.innerHTML='<div class="result-loading"><span class="spinner"></span> Querying Both-db…</div>';
+  try{
+    const r=await fetch(endpoint+encodeURIComponent(value),{headers:{accept:'application/json'}});
+    const text=await r.text();
+    let data; try{data=JSON.parse(text)}catch{data={raw:text}}
+    if(!r.ok) throw new Error('HTTP '+r.status+' — '+(data?.message||data?.error||'request failed'));
+    renderLookupResult(out,data,kind,value,r.status);
+  }catch(e){
+    out.innerHTML='<div class="result-error"><strong>Lookup failed</strong><span>'+esc(e.message)+'</span><small>If the browser blocks the direct request, enable CORS on Both-db for this site.</small></div>';
+  }
+}
 render();

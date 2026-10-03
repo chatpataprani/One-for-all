@@ -16,8 +16,30 @@ android {
         applicationId 'com.chatpataprani.hao'
         minSdk 23
         targetSdk 35
-        versionCode 8
-        versionName '4.2'
+        versionCode 9
+        versionName '4.3'
+    }
+}
+
+def haoIconResDir = file("$buildDir/generated/res/haoIcon")
+
+android.sourceSets.main.res.srcDir(haoIconResDir)
+
+def prepareHaoIcon = tasks.register("prepareHaoIcon") {
+    inputs.file("$rootDir/icon/hao_icon.webp.b64")
+    outputs.file("$haoIconResDir/drawable-nodpi/hao_icon.webp")
+    doLast {
+        def source = file("$rootDir/icon/hao_icon.webp.b64")
+        def outDir = file("$haoIconResDir/drawable-nodpi")
+        outDir.mkdirs()
+        def data = java.util.Base64.decoder.decode(source.text.trim())
+        file("$outDir/hao_icon.webp").bytes = data
+    }
+}
+
+tasks.configureEach {
+    if (name.startsWith("merge") && name.endsWith("Resources")) {
+        dependsOn(prepareHaoIcon)
     }
 }
 

@@ -101,7 +101,8 @@ data class Tool(val name:String,val description:String,val path:String,val enabl
         Tool("Gurmukhi Pad","Type Punjabi using English transliteration with live suggestions.","transliterate/",true),
         Tool("Vehicle Number Decoder","Decode Indian vehicle registration numbers, state/RTO information and BH-series formats.","vehicle/",true),
         Tool("Number Lookup","Search the configured lookup service by phone number and show returned structured fields.","__search_number__",true),
-        Tool("Aadhaar UIDAI Verification","Use the supplied Aadhaar verification workflow when its required UIDAI verification flow is available.","__search_aadhaar__",true)
+        Tool("Aadhaar UIDAI Verification","Check Aadhaar format and use HAO's direct lookup workflow.","__search_aadhaar__",true),
+        Tool("UIDAI Official OTP","Open the official UIDAI portal for OTP-based Aadhaar services. OTP stays on UIDAI and is never collected by HAO.","__uidai_otp__",true)
     )
 
 open class KotlinMainActivity : ComponentActivity() {
@@ -421,6 +422,13 @@ private fun ToolWorkspace(tool: Tool, intensity: Float, onDismiss: () -> Unit) {
                     Text("Number lookup uses the live direct Both-db service.")
                     Spacer(Modifier.height(10.dp))
                     Button(onClick={onDismiss},Modifier.fillMaxWidth()){Text("Open Number Search")}
+                }
+                tool.name == "UIDAI Official OTP" -> {
+                    Text("Official UIDAI OTP services open in your browser. HAO never asks for or stores the OTP.")
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={ context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://myaadhaar.uidai.gov.in/"))) }, Modifier.fillMaxWidth()){Text("Open Official UIDAI")}
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick={ context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://myaadhaar.uidai.gov.in/offline-ekyc"))) }, Modifier.fillMaxWidth()){Text("Open Offline e-KYC")}
                 }
                 tool.name == "Aadhaar UIDAI Verification" -> {
                     Text("Use HAO for local format checking and direct lookup, or open the official UIDAI portal for OTP-based services.")

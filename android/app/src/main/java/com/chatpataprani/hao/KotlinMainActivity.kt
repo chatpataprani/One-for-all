@@ -539,13 +539,17 @@ private fun validateLocal(name:String,raw:String):String {
 }
 private fun ageFromDate(s:String):String = try {
     val parts=s.trim().split("-")
-    require(parts.size==3)
-    val dob=java.util.Calendar.getInstance().apply { clear(); set(parts[0].toInt(),parts[1].toInt()-1,parts[2].toInt()) }
+    require(parts.size==3 && parts.all{it.isNotBlank()})
+    val y=parts[0].toInt(); val m=parts[1].toInt(); val d=parts[2].toInt()
+    val dob=java.util.Calendar.getInstance().apply { clear(); isLenient=false; set(y,m-1,d) }
+    dob.timeInMillis
     val now=java.util.Calendar.getInstance()
-    var years=now.get(java.util.Calendar.YEAR)-dob.get(java.util.Calendar.YEAR)
-    if(now.get(java.util.Calendar.DAY_OF_YEAR)<dob.get(java.util.Calendar.DAY_OF_YEAR)) years--
-    "Age: $years years. Born: ${parts[0]}-${parts[1]}-${parts[2]}."
-} catch(_:Exception) {"Use YYYY-MM-DD, for example 2000-01-15."}
+    var years=now.get(java.util.Calendar.YEAR)-y
+    val birthdayPassed=now.get(java.util.Calendar.MONTH)>m-1 || (now.get(java.util.Calendar.MONTH)==m-1 && now.get(java.util.Calendar.DAY_OF_MONTH)>=d)
+    if(!birthdayPassed) years--
+    require(years>=0)
+    "Age: $years years.\nBorn: %04d-%02d-%02d".format(y,m,d)
+} catch(_:Exception) {"Use a real date in YYYY-MM-DD format, for example 2000-01-15."}
 private fun vehicleDecode(s:String):String {
     val v=s.trim().uppercase(Locale.US).replace("\\s+".toRegex()," ")
     val code=v.replace(" ","").take(4)

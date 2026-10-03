@@ -435,7 +435,7 @@ private fun ToolWorkspace(tool: Tool, intensity: Float, onDismiss: () -> Unit) {
             }
             if(output.isNotBlank()){
                 Spacer(Modifier.height(14.dp))
-                GlassCard(intensity,RoundedCornerShape(20.dp)){
+                GlassCard(intensity, Modifier, RoundedCornerShape(20.dp)){
                     Text("RESULT",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.secondary)
                     Spacer(Modifier.height(8.dp)); Text(output)
                     Spacer(Modifier.height(8.dp))

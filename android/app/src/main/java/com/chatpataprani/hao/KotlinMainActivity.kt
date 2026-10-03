@@ -200,7 +200,7 @@ private fun HomeScreen(intensity:Float,onSearch:()->Unit,onTools:()->Unit,histor
         GlassCard(intensity,Modifier.padding(bottom=12.dp)) {
             Text("LOOKUP",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.secondary)
             Spacer(Modifier.height(8.dp));Text("Number & Aadhaar",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
-            Text("The upstream database address stays server-side and is not shown in the app.",color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Direct API mode is enabled so HAO works without the Vercel proxy.",color=MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp));Button(onClick=onSearch,modifier=Modifier.fillMaxWidth().height(52.dp)){Icon(Icons.Outlined.Search,null);Spacer(Modifier.width(8.dp));Text("Open search")}
         }
         GlassCard(intensity,Modifier.padding(bottom=12.dp)) {
@@ -289,10 +289,12 @@ private fun SearchScreen(intensity:Float,haptics:Boolean,history:List<String>,sa
 }
 
 private suspend fun performLookup(mode:String,value:String):Pair<String,String> {
-    val base=BuildConfig.BACKEND_URL.trimEnd('/')
-    if(base.isBlank()) return "Backend is not configured." to ""
+    val endpoint = if (mode == "aadhar") {
+        "https://both-db.vercel.app/aadhar=" + URLEncoder.encode(value, "UTF-8")
+    } else {
+        "https://both-db.vercel.app/number=" + URLEncoder.encode(value, "UTF-8")
+    }
     return try {
-        val endpoint=base+"/lookup?type="+mode+"&value="+URLEncoder.encode(value,"UTF-8")
         val c=URL(endpoint).openConnection() as HttpURLConnection
         c.requestMethod="GET";c.connectTimeout=15000;c.readTimeout=20000
         val code=c.responseCode
@@ -336,7 +338,7 @@ private fun SettingsSheet(dark:Boolean,glass:Float,haptics:Boolean,history:List<
             SettingCard("Search history",history.size.toString()+" local entries"){TextButton(onClick=onClear,enabled=history.isNotEmpty()){Text("Clear")}}
             SettingLink(Icons.Outlined.Code,"GitHub","Open the HAO project","https://github.com/chatpataprani/One-for-all")
             SettingLink(Icons.Outlined.CameraAlt,"Instagram","@chatpataprani","https://instagram.com/chatpataprani")
-            SettingCard("Privacy","The Both-db upstream URL and optional key stay server-side. Android only knows the HAO lookup route."){}
+            SettingCard("Privacy","HAO uses the configured Both-db API directly. No Vercel backend is required."){}
             SettingCard("Developer","Chatpataprani","Version 4.0 • "+tools.size.toString()+" tools"){}
             SettingLink(Icons.Outlined.Info,"About HAO","Reeldrop-inspired expressive workspace","https://github.com/chatpataprani/One-for-all")
             TextButton(onClick={Toast.makeText(context,"HAO settings saved locally",Toast.LENGTH_SHORT).show();onDismiss()},modifier=Modifier.fillMaxWidth()){Text("Done")}

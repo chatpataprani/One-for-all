@@ -15,7 +15,6 @@ import android.webkit.WebViewClient;
 import android.widget.*;
 import java.io.*;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.json.*;
 
@@ -101,9 +100,11 @@ public class MainActivity extends Activity {
         query.setHint(n?"Enter test number":"Enter test Aadhaar");query.setText("");results.removeAllViews();status.setText("");
     }
 
+    String encode(String value){ try { return URLEncoder.encode(value, "UTF-8"); } catch(Exception e) { return value; } }
+
     void lookup(){
         final String value=query.getText().toString().trim();if(value.isEmpty()){status.setText("Enter a value first.");return;}
-        final String target=(kind.equals("aadhar")?AADHAAR_API:NUMBER_API)+URLEncoder.encode(value,StandardCharsets.UTF_8);
+        final String target=(kind.equals("aadhar")?AADHAAR_API:NUMBER_API)+encode(value);
         status.setText("Searching…");results.removeAllViews();
         new Thread(()->{HttpURLConnection c=null;try{
             URL u=new URL(target);c=(HttpURLConnection)u.openConnection();c.setRequestMethod("GET");c.setRequestProperty("Accept","application/json");c.setConnectTimeout(15000);c.setReadTimeout(20000);

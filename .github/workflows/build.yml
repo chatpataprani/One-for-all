@@ -1,24 +1,31 @@
-name: Build HAO
+name: Build HAO APK
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-java@v4
         with:
-          node-version: 20
-      - run: node --check app.js
-      - run: node --check api/lookup.js
-      - run: node --check server.mjs
-      - run: mkdir -p build/api
-      - run: cp index.html app.js styles.css package.json server.mjs vercel.json README.md build/
-      - run: cp api/lookup.js build/api/
-      - run: cd build && zip -r ../hao-api-search.zip .
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Build debug APK
+        run: gradle -p android assembleDebug --no-daemon
+      - name: Verify APK
+        run: test -s android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Package source
+        run: zip -r hao-android-source.zip android/app/src android/app/build.gradle android/build.gradle android/settings.gradle android/gradle.properties README.md .github/workflows/build.yml
       - uses: actions/upload-artifact@v4
         with:
-          name: hao-api-search
-          path: hao-api-search.zip
+          name: hao-apk-and-source
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            hao-android-source.zip

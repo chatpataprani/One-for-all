@@ -23,3 +23,5 @@ jobs:
         with:
           name: hao-apk-and-source
           path: release/
+
+# Rebuild requested after backend hardening

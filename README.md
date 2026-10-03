@@ -21,6 +21,8 @@ HAO is a glass-style Android toolkit by **Chatpataprani** for identifier lookup,
 
 ## Build
 
+Builds are Android-only; the repository no longer contains the old Vercel/Node backend.
+
 Requirements: Android SDK 35, JDK 17, Gradle 8.9+.
 
 ```bash

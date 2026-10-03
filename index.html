@@ -1,1 +1,37 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07090d"><meta name="mobile-web-app-capable" content="yes"><title>hao — OSINT Workspace</title><link rel="manifest" href="./manifest.webmanifest"><link rel="stylesheet" href="./styles.css"></head><body><div id="app"></div><script type="module" src="./app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>hao — API Search</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <div class="eyebrow">HAO</div>
+        <h1>API Search</h1>
+        <p>Search the provided test Both-db API from one simple app.</p>
+      </div>
+      <span class="badge">TEST / LEARNING</span>
+    </header>
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab active" data-kind="number">Number</button>
+        <button class="tab" data-kind="aadhar">Aadhaar</button>
+      </div>
+      <form id="searchForm">
+        <label id="inputLabel" for="value">Number</label>
+        <div class="searchRow">
+          <input id="value" autocomplete="off" placeholder="Enter test number" required>
+          <button id="searchBtn" type="submit">Search</button>
+        </div>
+        <div id="status" class="status"></div>
+      </form>
+    </section>
+    <section id="result" class="result hidden"></section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

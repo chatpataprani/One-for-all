@@ -1,0 +1,9 @@
+{
+  "name":"One-for-all",
+  "short_name":"One-for-all",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#08090b",
+  "theme_color":"#08090b",
+  "description":"chatpataprani all-in-one learning tools workspace"
+}

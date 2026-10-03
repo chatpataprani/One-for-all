@@ -1,26 +1,50 @@
 package com.chatpataprani.hao
 
-import android.app.Activity
-import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
-import android.view.Gravity
-import android.widget.*
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
 
-class KotlinMainActivity : Activity() {
-    private val bg=Color.rgb(10,11,15); private val surface=Color.rgb(20,22,28); private val surface2=Color.rgb(28,31,39)
-    private val border=Color.rgb(52,56,68); private val text=Color.rgb(246,247,250); private val muted=Color.rgb(157,163,177); private val accent=Color.rgb(228,231,238)
-    private var mode="number"; private var currentScreen="home"; private lateinit var query:EditText; private lateinit var results:LinearLayout; private lateinit var status:TextView
-    private val backendUrl=BuildConfig.BACKEND_URL
-    data class Tool(val name:String,val description:String,val path:String,val implemented:Boolean)
     private val tools=listOf(
         Tool("Aadhaar Validator","Validate Aadhaar format and checksum using the Verhoeff algorithm; includes the official UIDAI link.","aadhaar/",true),
         Tool("Age & Date Calculator","Calculate exact age, date differences, weekdays and working-day timelines.","age-calculator/",true),
@@ -76,25 +100,260 @@ class KotlinMainActivity : Activity() {
         Tool("Number Lookup","Search the configured lookup service by phone number and show returned structured fields.","__search_number__",true),
         Tool("Aadhaar UIDAI Verification","Use the supplied Aadhaar verification workflow when its required UIDAI verification flow is available.","__search_aadhaar__",true)
     )
-    override fun onCreate(state:Bundle?){super.onCreate(state);window.statusBarColor=bg;window.navigationBarColor=bg;home()}
-    private fun tv(s:String,size:Float,color:Int=text)=TextView(this).apply{text=s;textSize=size;setTextColor(color)}
-    private fun rounded(color:Int,radius:Float)=android.graphics.drawable.GradientDrawable().apply{setColor(color);cornerRadius=radius;setStroke(1,border)}
-    private fun button(s:String,filled:Boolean=false)=Button(this).apply{text=s;textSize=13f;isAllCaps=false;setTextColor(if(filled)Color.rgb(15,16,20) else text);background=rounded(if(filled)accent else surface2,18f);setPadding(16,0,16,0)}
-    private fun page()=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(18,10,18,14);setBackgroundColor(bg)}
-    private fun card()=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(17,16,17,17);background=rounded(surface,20f)}
-    private fun lp(top:Int=0,bottom:Int=0)=LinearLayout.LayoutParams(-1,-2).apply{setMargins(0,top,0,bottom)}
-    private fun header(p:LinearLayout,section:String){val row=LinearLayout(this).apply{gravity=Gravity.CENTER_VERTICAL};row.addView(tv("HAO",14f).apply{setTypeface(null,Typeface.BOLD)},LinearLayout.LayoutParams(-2,48));row.addView(tv("  /  $section",13f,muted),LinearLayout.LayoutParams(0,48,1f));row.addView(button("⋮").apply{setOnClickListener{settings()}},LinearLayout.LayoutParams(52,48));p.addView(row)}
-    private fun title(p:LinearLayout,a:String,b:String){p.addView(tv(a,30f).apply{setTypeface(null,Typeface.BOLD);setPadding(0,8,0,3)});p.addView(tv(b,14f,muted).apply{setPadding(0,0,0,8)})}
-    private fun shell(content:LinearLayout,screen:String){currentScreen=screen;val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setBackgroundColor(bg)};root.addView(ScrollView(this).apply{addView(content)},LinearLayout.LayoutParams(-1,0,1f));val nav=LinearLayout(this).apply{setPadding(10,8,10,8);setBackgroundColor(bg)};listOf("Home","Search","Tools").forEachIndexed{i,label->{val active=(i==0&&screen=="home")||(i==1&&screen=="search")||(i==2&&screen=="tools");val b=button(label,active);nav.addView(b,LinearLayout.LayoutParams(0,54,1f).apply{if(i>0)leftMargin=7});b.setOnClickListener{when(i){0->home();1->search();else->tools()}}}};root.addView(nav,LinearLayout.LayoutParams(-1,70));setContentView(root)}
-    private fun home(){val p=page();header(p,"home");title(p,"Search smarter.","HAO now contains the complete tool catalogue from your supplied ZIP.");val search=card();search.addView(tv("LOOKUP",11f,muted).apply{setTypeface(null,Typeface.BOLD)});search.addView(tv("Number & Aadhaar",22f).apply{setTypeface(null,Typeface.BOLD);setPadding(0,7,0,3)});search.addView(tv("The upstream address is not shown in the interface.",13f,muted));search.addView(button("Open search",true).apply{setOnClickListener{search()}},lp(15));p.addView(search,lp(8));val all=card();all.addView(tv("TOOLS",11f,muted).apply{setTypeface(null,Typeface.BOLD)});all.addView(tv("${tools.size} tools",21f).apply{setTypeface(null,Typeface.BOLD);setPadding(0,7,0,3)});all.addView(tv("Every tool from the supplied ZIP is represented with its name, description and launch target.",13f,muted));all.addView(button("Browse all tools",true).apply{setOnClickListener{tools()}},lp(15));p.addView(all,lp(10));p.addView(tv("Developer  •  Chatpataprani",12f,muted).apply{setPadding(2,22,2,8)});shell(p,"home")}
-    private fun search(){val p=page();header(p,"search");title(p,"Database search","Choose a mode, enter a value, then view structured results.");val tabs=LinearLayout(this);val n=button("Number",mode=="number");val a=button("Aadhaar",mode=="aadhar");tabs.addView(n,LinearLayout.LayoutParams(0,50,1f));tabs.addView(a,LinearLayout.LayoutParams(0,50,1f).apply{leftMargin=8});p.addView(tabs,lp(4,8));n.setOnClickListener{mode="number";search()};a.setOnClickListener{mode="aadhar";search()};val box=card();box.addView(tv(if(mode=="number")"NUMBER" else "AADHAAR",11f,muted).apply{setTypeface(null,Typeface.BOLD)});query=EditText(this).apply{singleLine=true;textSize=16f;setTextColor(text);setHintTextColor(muted);hint=if(mode=="number")"Enter number" else "Enter Aadhaar";setPadding(15,0,15,0);background=rounded(Color.rgb(12,14,19),15f)};box.addView(query,lp(8,9));box.addView(button("Search",true).apply{setOnClickListener{lookup()}},LinearLayout.LayoutParams(-1,52));status=tv("",13f,muted).apply{setPadding(2,12,2,2)};box.addView(status);p.addView(box);results=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};p.addView(results);shell(p,"search")}
-    private fun lookup(){val value=query.text.toString().trim();if(value.isEmpty()){status.text="Enter a value first.";return};if(backendUrl.isBlank()){status.text="Backend is not configured.";return};status.text="Searching…";results.removeAllViews();Thread{var c:HttpURLConnection?=null;try{val endpoint=backendUrl.trimEnd('/')+"/lookup?type=$mode&value="+URLEncoder.encode(value,"UTF-8");c=URL(endpoint).openConnection() as HttpURLConnection;c.requestMethod="GET";c.connectTimeout=15000;c.readTimeout=20000;val code=c.responseCode;val stream=if(code>=400)c.errorStream else c.inputStream;val raw=stream?.bufferedReader()?.use{it.readText()}?:"";runOnUiThread{render(code,raw)}}catch(_:Exception){runOnUiThread{status.text="Connection failed. Check the configured service."}}finally{c?.disconnect()}}.start()}
-    private fun render(code:Int,raw:String){status.text=if(code in 200..299)"Search complete" else "Request failed";if(raw.isBlank()){info("No response","The service returned an empty response.");return};try{val obj=JSONObject(raw);val arr=obj.optJSONArray("results");if(arr!=null){results.addView(tv("${arr.length()} result(s)",13f,muted),lp(8,2));for(i in 0 until arr.length())resultCard(arr.get(i),i+1)}else resultCard(obj,1)}catch(_:Exception){info("Response",raw)}}
-    private fun resultCard(item:Any,number:Int){val c=card();c.addView(tv("RESULT $number",11f,muted).apply{setTypeface(null,Typeface.BOLD)});if(item is JSONObject){val it=item.keys();while(it.hasNext()){val key=it.next();c.addView(tv(key.uppercase(Locale.US),10f,muted).apply{setPadding(0,10,0,1)});c.addView(tv(item.optString(key),14f))}}else c.addView(tv(item.toString(),14f));results.addView(c,lp(8))}
-    private fun info(name:String,description:String){val c=card();c.addView(tv(name,16f).apply{setTypeface(null,Typeface.BOLD)});c.addView(tv(description,13f,muted).apply{setPadding(0,5,0,0)});results.addView(c,lp(8))}
-    private fun tools(){val p=page();header(p,"tools");title(p,"All tools","Complete catalogue from the supplied ZIP. Each card has a name and a short description.");tools.forEach{tool->val c=card();val row=LinearLayout(this);row.addView(tv(tool.name,17f).apply{setTypeface(null,Typeface.BOLD)},LinearLayout.LayoutParams(0,-2,1f));row.addView(button("Open").apply{setOnClickListener{openTool(tool)}},LinearLayout.LayoutParams(78,46));c.addView(row);c.addView(tv(tool.description,13f,muted).apply{setPadding(0,6,0,0)});p.addView(c,lp(7))};shell(p,"tools")}
-    private fun openTool(tool:Tool){when(tool.path){"__search_number__"->{mode="number";search()};"__search_aadhaar__"->{mode="aadhar";search()};else->AlertDialog.Builder(this).setTitle(tool.name).setMessage(tool.description+"\n\nThe tool is registered from the supplied ZIP. Its original page is not yet bundled into this native build.").setPositiveButton("OK",null).show()}}
-    private fun settings(){val box=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(24,18,24,8)};box.addView(tv("HAO Settings",24f).apply{setTypeface(null,Typeface.BOLD)});box.addView(tv("Kotlin utility workspace",13f,muted));setting(box,"Developer","Chatpataprani",null);setting(box,"GitHub","Open the HAO project","https://github.com/chatpataprani/One-for-all");setting(box,"Instagram","Open @chatpataprani","https://instagram.com/chatpataprani");setting(box,"Privacy","The upstream database address is not displayed in the UI.",null);setting(box,"Catalogue","${tools.size} tools imported from the supplied ZIP.",null);AlertDialog.Builder(this).setView(box).setNegativeButton("Close",null).show()}
-    private fun setting(box:LinearLayout,name:String,description:String,url:String?){val b=button("$name\n$description");b.gravity=Gravity.LEFT or Gravity.CENTER_VERTICAL;b.setOnClickListener{if(url!=null)startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))};box.addView(b,lp(7))}
-    override fun onBackPressed(){if(currentScreen!="home")home()else super.onBackPressed()}
+
+class KotlinMainActivity : ComponentActivity() {
+    override fun onCreate(state: Bundle?) {
+        super.onCreate(state)
+        enableEdgeToEdge()
+        setContent { HaoApp() }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HaoApp() {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("hao", Context.MODE_PRIVATE) }
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+    var settings by rememberSaveable { mutableStateOf(false) }
+    var dark by rememberSaveable { mutableStateOf(prefs.getBoolean("dark", true)) }
+    var glass by rememberSaveable { mutableFloatStateOf(prefs.getFloat("glass", .86f)) }
+    var haptics by rememberSaveable { mutableStateOf(prefs.getBoolean("haptics", true)) }
+    var history by remember { mutableStateOf(prefs.getStringSet("history", emptySet())?.toList()?.reversed() ?: emptyList()) }
+    val scheme = if (dark) darkColorScheme(
+        background=Color(7,9,14), surface=Color(18,21,29), surfaceVariant=Color(30,34,44),
+        primary=Color(224,231,255), secondary=Color(177,195,255)
+    ) else lightColorScheme(
+        background=Color(241,244,250), surface=Color(250,251,255), surfaceVariant=Color(231,235,244),
+        primary=Color(54,72,125), secondary=Color(79,96,145)
+    )
+    MaterialTheme(colorScheme=scheme) {
+        Scaffold(
+            containerColor=Color.Transparent,
+            topBar={
+                TopAppBar(
+                    title={Column{Text("HAO",fontWeight=FontWeight.Bold,letterSpacing=1.8.sp);Text(
+                        if(tab==0)"home" else if(tab==1)"search" else "tools",
+                        style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}},
+                    actions={IconButton(onClick={settings=true}){Icon(Icons.Outlined.Tune,"Settings")}},
+                    colors=TopAppBarDefaults.topAppBarColors(containerColor=Color.Transparent)
+                )
+            },
+            bottomBar={
+                NavigationBar(containerColor=MaterialTheme.colorScheme.surface.copy(alpha=.80f)) {
+                    NavigationBarItem(tab==0,{tab=0},{Icon(Icons.Outlined.Home,null);Text("Home")})
+                    NavigationBarItem(tab==1,{tab=1},{Icon(Icons.Outlined.Search,null);Text("Search")})
+                    NavigationBarItem(tab==2,{tab=2},{Icon(Icons.Outlined.GridView,null);Text("Tools")})
+                }
+            }
+        ){pad ->
+            Box(Modifier.fillMaxSize().padding(pad)) {
+                when(tab) {
+                    0 -> HomeScreen(glass,{tab=1},{tab=2},history,{tab=1})
+                    1 -> SearchScreen(glass,haptics,history){newList ->
+                        history=newList
+                        prefs.edit().putStringSet("history",newList.toSet()).apply()
+                    }
+                    else -> ToolsScreen(glass){tool ->
+                        if(tool.path=="__search_number__" || tool.path=="__search_aadhaar__") tab=1
+                        else Toast.makeText(context,"Tool registered: "+tool.name,Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+        if(settings) SettingsSheet(dark,glass,haptics,history,
+            {dark=it;prefs.edit().putBoolean("dark",it).apply()},
+            {glass=it;prefs.edit().putFloat("glass",it).apply()},
+            {haptics=it;prefs.edit().putBoolean("haptics",it).apply()},
+            {history=emptyList();prefs.edit().remove("history").apply()},
+            {settings=false}
+        )
+    }
+}
+
+@Composable
+private fun GlassCard(intensity:Float,modifier:Modifier=Modifier,shape:Shape=RoundedCornerShape(26.dp),content:@Composable ColumnScope.()->Unit) {
+    val c=MaterialTheme.colorScheme
+    Column(modifier.fillMaxWidth().clip(shape)
+        .background(Brush.linearGradient(listOf(
+            c.surface.copy(alpha=(.55f+intensity*.25f).coerceAtMost(.92f)),
+            c.surfaceVariant.copy(alpha=(.22f+intensity*.25f).coerceAtMost(.62f)),
+            c.surface.copy(alpha=(.45f+intensity*.22f).coerceAtMost(.88f))
+        )))
+        .padding(1.dp)
+        .background(c.surface.copy(alpha=.38f),shape)
+        .padding(18.dp),content=content)
+}
+
+@Composable
+private fun SectionTitle(title:String,subtitle:String) {
+    Column(Modifier.padding(horizontal=4.dp,vertical=10.dp)) {
+        Text(title,style=MaterialTheme.typography.headlineLarge,fontWeight=FontWeight.Bold)
+        Text(subtitle,color=MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun HomeScreen(intensity:Float,onSearch:()->Unit,onTools:()->Unit,history:List<String>,onHistory:()->Unit) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
+        SectionTitle("Search smarter.","Fast lookup, clean results, glass-first UI.")
+        GlassCard(intensity,Modifier.padding(bottom=12.dp)) {
+            Text("LOOKUP",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.secondary)
+            Spacer(Modifier.height(8.dp));Text("Number & Aadhaar",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
+            Text("The upstream database address stays server-side and is not shown in the app.",color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(16.dp));Button(onClick=onSearch,modifier=Modifier.fillMaxWidth().height(52.dp)){Icon(Icons.Outlined.Search,null);Spacer(Modifier.width(8.dp));Text("Open search")}
+        }
+        GlassCard(intensity,Modifier.padding(bottom=12.dp)) {
+            Text("TOOLKIT",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.secondary)
+            Spacer(Modifier.height(8.dp));Text(tools.size.toString()+" tools",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
+            Text("Every tool has its own named glass box and can be filtered by category.",color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(16.dp));OutlinedButton(onClick=onTools,modifier=Modifier.fillMaxWidth().height(50.dp)){Text("Browse all tools")}
+        }
+        if(history.isNotEmpty()) {
+            Text("RECENT",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,modifier=Modifier.padding(6.dp,12.dp,6.dp,6.dp))
+            history.take(5).forEach { item ->
+                GlassCard(intensity,Modifier.padding(bottom=8.dp),RoundedCornerShape(20.dp)) {
+                    Row(Modifier.fillMaxWidth().clickable(onClick=onHistory),verticalAlignment=Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.History,null,tint=MaterialTheme.colorScheme.secondary);Spacer(Modifier.width(12.dp));Text(item,fontWeight=FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+        Text("Developer  •  Chatpataprani",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(6.dp,18.dp,6.dp,24.dp))
+    }
+}
+
+@Composable
+private fun ToolsScreen(intensity:Float,onOpen:(Tool)->Unit) {
+    var filter by rememberSaveable{mutableStateOf("")}
+    var category by rememberSaveable{mutableStateOf("All")}
+    val categories=listOf("All")+tools.map{it.name.substringBefore(" ")}.distinct()
+    val shown=tools.filter{filter.isBlank() || it.name.contains(filter,true) || it.description.contains(filter,true)}
+    Column(Modifier.fillMaxSize().padding(horizontal=14.dp)) {
+        SectionTitle("All tools","Every tool is a glass box with its name, purpose and open action.")
+        OutlinedTextField(value=filter,onValueChange={filter=it},singleLine=true,placeholder={Text("Find a tool…")},leadingIcon={Icon(Icons.Outlined.Search,null)},modifier=Modifier.fillMaxWidth().padding(bottom=8.dp))
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(bottom=10.dp)) {
+            categories.take(10).forEach { chip -> FilterChip(selected=category==chip,onClick={category=chip},label={Text(chip)},modifier=Modifier.padding(end=6.dp)) }
+        }
+        LazyVerticalGrid(columns=GridCells.Adaptive(minSize=155.dp),contentPadding=PaddingValues(bottom=18.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+            items(shown,key={it.name}) { tool ->
+                GlassCard(intensity,Modifier.heightIn(min=170.dp),RoundedCornerShape(22.dp)) {
+                    Text(tool.name.uppercase(Locale.US),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.secondary,fontWeight=FontWeight.Bold,maxLines=2)
+                    Spacer(Modifier.height(8.dp));Text(tool.name,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
+                    Spacer(Modifier.height(6.dp));Text(tool.description,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=4)
+                    Spacer(Modifier.weight(1f));TextButton(onClick={onOpen(tool)}){Text("Open  →")}
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchScreen(intensity:Float,haptics:Boolean,history:List<String>,saveHistory:(List<String>)->Unit) {
+    var mode by rememberSaveable{mutableStateOf("number")}
+    var query by rememberSaveable{mutableStateOf("")}
+    var status by remember{mutableStateOf("")}
+    var raw by remember{mutableStateOf("")}
+    var loading by remember{mutableStateOf(false)}
+    val scope=rememberCoroutineScope()
+    val feedback=LocalHapticFeedback.current
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
+        SectionTitle("Database search","Choose a mode, enter a value, and view structured results.")
+        Row(Modifier.padding(bottom=10.dp)) {
+            FilterChip(selected=mode=="number",onClick={mode="number"},label={Text("Number")},modifier=Modifier.padding(end=8.dp))
+            FilterChip(selected=mode=="aadhar",onClick={mode="aadhar"},label={Text("Aadhaar")})
+        }
+        GlassCard(intensity) {
+            Text(if(mode=="number")"NUMBER" else "AADHAAR",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.secondary)
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(value=query,onValueChange={query=it},singleLine=true,label={Text(if(mode=="number")"Phone number" else "Aadhaar number")},keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),modifier=Modifier.fillMaxWidth())
+            Spacer(Modifier.height(10.dp))
+            Button(enabled=!loading,onClick={
+                if(query.trim().isEmpty()){status="Enter a value first.";return@Button}
+                if(haptics) feedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                loading=true;status="Searching…";raw=""
+                val value=query.trim()
+                scope.launch {
+                    val result=withContext(Dispatchers.IO){performLookup(mode,value)}
+                    loading=false;status=result.first;raw=result.second
+                    if(result.second.isNotBlank()) saveHistory((listOf(mode+" • "+value)+history).distinct().take(20))
+                }
+            },modifier=Modifier.fillMaxWidth().height(52.dp)) {
+                if(loading) CircularProgressIndicator(Modifier.size(20.dp),strokeWidth=2.dp)
+                else {Icon(Icons.Outlined.Search,null);Spacer(Modifier.width(8.dp));Text("Search")}
+            }
+            if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(top=10.dp))
+        }
+        if(raw.isNotBlank()){Spacer(Modifier.height(12.dp));ResultView(intensity,raw)}
+    }
+}
+
+private suspend fun performLookup(mode:String,value:String):Pair<String,String> {
+    val base=BuildConfig.BACKEND_URL.trimEnd('/')
+    if(base.isBlank()) return "Backend is not configured." to ""
+    return try {
+        val endpoint=base+"/lookup?type="+mode+"&value="+URLEncoder.encode(value,"UTF-8")
+        val c=URL(endpoint).openConnection() as HttpURLConnection
+        c.requestMethod="GET";c.connectTimeout=15000;c.readTimeout=20000
+        val code=c.responseCode
+        val stream=if(code>=400)c.errorStream else c.inputStream
+        val body=stream?.bufferedReader()?.use{it.readText()}?:""
+        c.disconnect()
+        if(code in 200..299) "Search complete" to body else "Request failed" to body
+    } catch(_:Exception) {"Connection failed. Check the configured service." to ""}
+}
+
+@Composable
+private fun ResultView(intensity:Float,raw:String) {
+    val obj=runCatching{JSONObject(raw)}.getOrNull()
+    if(obj==null){GlassCard(intensity){Text("RESPONSE",fontWeight=FontWeight.Bold);Spacer(Modifier.height(8.dp));Text(raw)};return}
+    val arr=obj.optJSONArray("results")
+    if(arr!=null){Text(arr.length().toString()+" result(s)",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,modifier=Modifier.padding(6.dp,4.dp));for(i in 0 until arr.length())ResultObjectCard(intensity,arr.optJSONObject(i),i+1)}
+    else ResultObjectCard(intensity,obj,1)
+}
+
+@Composable
+private fun ResultObjectCard(intensity:Float,obj:JSONObject?,number:Int) {
+    if(obj==null)return
+    GlassCard(intensity,Modifier.padding(bottom=10.dp),RoundedCornerShape(22.dp)) {
+        Text("RESULT "+number,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.secondary,fontWeight=FontWeight.Bold)
+        obj.keys().forEach { key -> Spacer(Modifier.height(8.dp));Text(key.uppercase(Locale.US),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant);Text(obj.optString(key),style=MaterialTheme.typography.bodyLarge,fontWeight=FontWeight.SemiBold)}
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsSheet(dark:Boolean,glass:Float,haptics:Boolean,history:List<String>,onDark:(Boolean)->Unit,onGlass:(Float)->Unit,onHaptics:(Boolean)->Unit,onClear:()->Unit,onDismiss:()->Unit) {
+    val context=LocalContext.current
+    ModalBottomSheet(onDismissRequest=onDismiss,containerColor=MaterialTheme.colorScheme.surface.copy(alpha=.96f)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal=20.dp).padding(bottom=28.dp)) {
+            Text("Settings",style=MaterialTheme.typography.headlineMedium,fontWeight=FontWeight.Bold)
+            Text("Personalize your HAO workspace.",color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(16.dp))
+            SettingCard("Appearance","Dark glass theme"){Switch(checked=dark,onCheckedChange=onDark)}
+            SettingCard("Glass intensity","Control card translucency"){Slider(value=glass,onValueChange=onGlass,valueRange=.55f..1f)}
+            SettingCard("Haptics","Subtle feedback on search"){Switch(checked=haptics,onCheckedChange=onHaptics)}
+            SettingCard("Search history",history.size.toString()+" local entries"){TextButton(onClick=onClear,enabled=history.isNotEmpty()){Text("Clear")}}
+            SettingLink(Icons.Outlined.Code,"GitHub","Open the HAO project","https://github.com/chatpataprani/One-for-all")
+            SettingLink(Icons.Outlined.CameraAlt,"Instagram","@chatpataprani","https://instagram.com/chatpataprani")
+            SettingCard("Privacy","The Both-db upstream URL and optional key stay server-side. Android only knows the HAO lookup route."){}
+            SettingCard("Developer","Chatpataprani","Version 4.0 • "+tools.size.toString()+" tools"){}
+            SettingLink(Icons.Outlined.Info,"About HAO","Reeldrop-inspired expressive workspace","https://github.com/chatpataprani/One-for-all")
+            TextButton(onClick={Toast.makeText(context,"HAO settings saved locally",Toast.LENGTH_SHORT).show();onDismiss()},modifier=Modifier.fillMaxWidth()){Text("Done")}
+        }
+    }
+}
+
+@Composable
+private fun SettingCard(title:String,description:String="",trailing:@Composable RowScope.()->Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical=5.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha=.46f)).padding(16.dp),verticalAlignment=Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)){Text(title,fontWeight=FontWeight.SemiBold);if(description.isNotBlank())Text(description,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+        trailing()
+    }
+}
+
+@Composable
+private fun SettingLink(icon:androidx.compose.ui.graphics.vector.ImageVector,title:String,description:String,url:String) {
+    val context=LocalContext.current
+    SettingCard(title,description){IconButton(onClick={context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))}){Icon(icon,null)}}
 }

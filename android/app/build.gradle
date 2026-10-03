@@ -4,8 +4,6 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
-def haoBackendUrl = System.getenv("HAO_BACKEND_URL") ?: ""
-
 android {
     namespace 'com.chatpataprani.hao'
     compileSdk 35

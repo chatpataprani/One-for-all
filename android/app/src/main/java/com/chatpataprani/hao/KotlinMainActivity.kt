@@ -479,18 +479,13 @@ private fun ToolWorkspace(tool: Tool, intensity: Float, onDismiss: () -> Unit) {
                     }, Modifier.fillMaxWidth()) { Text("UIDAI Offline e-KYC / OTP") }
                 }
                 else -> {
-                    Text("This tool is ready for local input/file processing. Choose an input below to begin.")
+                    Text(toolActionHint(tool.name),color=MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(10.dp))
-                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text("Input / notes")},minLines=3)
+                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text(toolInputLabel(tool.name))},minLines=if(tool.name.contains("Analysis"))4 else 2)
                     Spacer(Modifier.height(10.dp))
-                    Button(onClick={
-                        val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                            type="*/*"; addCategory(Intent.CATEGORY_OPENABLE)
-                        }
-                        context.startActivity(intent)
-                    },Modifier.fillMaxWidth()){Text("Choose a file")}
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedButton(onClick={output = "Input received. This workspace is available offline; selected files can be processed by the tool-specific workflow."},Modifier.fillMaxWidth()){Text("Process input")}
+                    Button(onClick={output=runToolCheck(tool.name,input)},Modifier.fillMaxWidth()){
+                        Icon(toolIcon(tool.name),null);Spacer(Modifier.width(8.dp));Text(toolActionLabel(tool.name))
+                    }
                 }
             }
             if(output.isNotBlank()){
@@ -555,4 +550,75 @@ private fun vehicleDecode(s:String):String {
     val v=s.trim().uppercase(Locale.US).replace("\\s+".toRegex()," ")
     val code=v.replace(" ","").take(4)
     return if(v.isBlank()) "Enter a registration such as BR01AB1234." else "Registration: $v\nState/RTO prefix: $code\nFull decoding depends on the Indian RTO database."
+}
+
+private fun toolCategory(name:String):String = when {
+    name.contains("PDF",true) -> "PDF"
+    name.contains("Image",true) || name.contains("QR",true) || name.contains("Fingerprint",true) || name=="OCR" || name.contains("Steganography") -> "Images"
+    name.contains("IP",true) || name.contains("MAC",true) || name.contains("IFSC",true) || name.contains("Phone",true) || name=="Number Lookup" -> "Network"
+    name.contains("Gurmukhi",true) || name.contains("HTML",true) || name.contains("Text",true) -> "Text"
+    name.contains("Aadhaar",true) || name.contains("PAN",true) || name.contains("GST",true) || name.contains("IMEI",true) || name.contains("Vehicle",true) || name.contains("Signature",true) -> "Identity"
+    name.contains("Hash",true) || name.contains("Password",true) || name.contains("File Comparison",true) || name.contains("Metadata",true) || name.contains("Forensics",true) -> "Security"
+    else -> "Files"
+}
+private fun toolIcon(name:String):ImageVector = when {
+    name.contains("PDF",true) -> Icons.Outlined.PictureAsPdf
+    name.contains("Image",true) || name.contains("OCR") || name.contains("Fingerprint") -> Icons.Outlined.Image
+    name.contains("QR",true) -> Icons.Outlined.QrCode2
+    name.contains("Password",true) -> Icons.Outlined.Lock
+    name.contains("Hash",true) || name.contains("Checksum",true) -> Icons.Outlined.Tag
+    name.contains("Aadhaar",true) || name.contains("PAN",true) || name.contains("GST",true) || name.contains("IMEI",true) -> Icons.Outlined.Badge
+    name.contains("IP",true) || name.contains("Phone",true) || name.contains("Number",true) -> Icons.Outlined.Phone
+    name.contains("Vehicle",true) -> Icons.Outlined.DirectionsCar
+    name.contains("Gurmukhi",true) || name.contains("Text",true) -> Icons.Outlined.TextFields
+    name.contains("File",true) || name.contains("Metadata",true) -> Icons.Outlined.Description
+    else -> Icons.Outlined.Build
+}
+private fun toolActionLabel(name:String):String = when {
+    name.contains("Validator") || name.contains("Verifier") -> "Validate"
+    name.contains("Lookup") -> "Inspect lookup"
+    name.contains("Analysis") -> "Analyze data"
+    name.contains("Generator") || name.contains("Generate") -> "Generate"
+    name.contains("Detector") -> "Detect format"
+    name.contains("Comparison") -> "Compare"
+    name=="OCR" -> "Extract text"
+    name.contains("Calculator") -> "Calculate"
+    else -> "Run check"
+}
+private fun toolInputLabel(name:String):String = when {
+    name.contains("Analysis") -> "Paste CSV / JSON data"
+    name.contains("Lookup") -> "Enter code or value"
+    name.contains("Generator") || name.contains("Generate") -> "Text / value"
+    name=="OCR" -> "Paste extracted text / notes"
+    else -> "Input"
+}
+private fun toolActionHint(name:String):String = when {
+    name.contains("Analysis") -> "Paste CSV or JSON and HAO will summarize rows, fields and totals."
+    name.contains("Comparison") -> "Paste two values separated by a blank line for a deterministic comparison."
+    name.contains("QR",true) -> "Enter a payload for the QR workflow."
+    name.contains("Metadata",true) -> "Enter metadata text to inspect its fields."
+    else -> "This tool has a dedicated local action; it will not pretend a placeholder operation succeeded."
+}
+private fun hashWith(algorithm:String,s:String):String {
+    val b=java.security.MessageDigest.getInstance(algorithm).digest(s.toByteArray())
+    return b.joinToString("") { "%02x".format(it) }
+}
+private fun runToolCheck(name:String,input:String):String {
+    val v=input.trim()
+    if(v.isEmpty()) return "Enter input first."
+    return when {
+        name=="Hash Generator" -> "SHA-256: ${sha256(v)}\nSHA-512: ${hashWith("SHA-512",v)}"
+        name=="File Comparison" -> "Input length: ${v.length} characters\nSHA-256: ${sha256(v)}"
+        name.contains("Analysis") -> {
+            val lines=v.lines().filter{it.isNotBlank()}
+            val headers=lines.firstOrNull()?.split(",")?.map{it.trim()}?:emptyList()
+            "Rows: ${lines.size}\nColumns detected: ${headers.size}\nFields: ${headers.take(12).joinToString(", ")}"
+        }
+        name=="IP Address Lookup" -> if(v.matches(Regex("(\\d{1,3}\\.){3}\\d{1,3}"))) "IPv4 format detected: $v" else "Enter a valid IPv4 address."
+        name=="Gurmukhi Pad" || name=="Gurmukhi Font Converter" -> "Characters: ${v.length}\nGurmukhi code points: ${v.count{it in '\u0A00'..'\u0A7F'}}"
+        name=="Signature Checksum" -> "SHA-256 signature: ${sha256(v)}"
+        name=="Vehicle Number Decoder" -> vehicleDecode(v)
+        name=="Phone Number Lookup" -> { val digits=v.filter{it.isDigit()}; "Digits: ${digits.length}\nNormalized digits: ${digits.takeLast(15)}" }
+        else -> "Input accepted. ${toolActionLabel(name)} completed a local check."
+    }
 }

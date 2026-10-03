@@ -12,20 +12,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Bundle supplied tools ZIP
-        run: |
-          rm -rf /tmp/punjab
-          git clone --depth 1 https://github.com/PBhadoo/punjab.pages.dev.git /tmp/punjab.pages.dev-main
-          mkdir -p android/app/src/main/assets
-          cd /tmp
-          zip -qr "$GITHUB_WORKSPACE/android/app/src/main/assets/tools-bundle.zip" punjab
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - run: gradle -p android assembleDebug
-      - run: mkdir -p release
-      - run: cp android/app/build/outputs/apk/debug/app-debug.apk release/hao-debug.apk
-      - run: cd android && zip -r ../release/hao-android-source.zip . -x '.gradle/*'
+      - name: Build APK
+        run: gradle -p android assembleDebug
+      - name: Package release
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/hao-debug.apk
+          cd android && zip -r ../release/hao-android-source.zip . -x '.gradle/*'
       - uses: actions/upload-artifact@v4
         with:
           name: hao-apk-and-source

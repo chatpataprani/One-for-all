@@ -6,11 +6,13 @@ plugins {
 android {
     namespace 'com.chatpataprani.hao'
     compileSdk 35
+    buildFeatures { buildConfig true }
     defaultConfig {
         applicationId 'com.chatpataprani.hao'
         minSdk 23
         targetSdk 35
         versionCode 4
         versionName '3.0'
+        buildConfigField 'String', 'BACKEND_URL', '""'
     }
 }

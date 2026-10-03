@@ -138,7 +138,7 @@ private fun HaoApp() {
                 TopAppBar(
                     title={Column{Text("HAO",fontWeight=FontWeight.Bold,letterSpacing=1.8.sp);Text(
                         if(tab==0)"home" else if(tab==1)"search" else "tools",
-                        style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}},
+                        style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}},
                     actions={IconButton(onClick={settings=true}){Icon(Icons.Outlined.Tune,"Settings")}},
                     colors=TopAppBarDefaults.topAppBarColors(containerColor=Color.Transparent)
                 )

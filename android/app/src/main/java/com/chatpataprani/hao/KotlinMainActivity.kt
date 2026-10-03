@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +33,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +45,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
+
+data class Tool(val name:String,val description:String,val path:String,val enabled:Boolean)
 
     private val tools=listOf(
         Tool("Aadhaar Validator","Validate Aadhaar format and checksum using the Verhoeff algorithm; includes the official UIDAI link.","aadhaar/",true),
@@ -341,7 +344,7 @@ private fun SettingsSheet(dark:Boolean,glass:Float,haptics:Boolean,history:List<
             SettingLink(Icons.Outlined.Code,"GitHub","Open the HAO project","https://github.com/chatpataprani/One-for-all")
             SettingLink(Icons.Outlined.CameraAlt,"Instagram","@chatpataprani","https://instagram.com/chatpataprani")
             SettingCard("Privacy","HAO uses the configured Both-db API directly. No Vercel backend is required."){}
-            SettingCard("Developer","Chatpataprani","Version 4.0 • "+tools.size.toString()+" tools"){}
+            SettingCard("Developer","Chatpataprani"){ Text("Version 4.0 • "+tools.size.toString()+" tools") }
             SettingLink(Icons.Outlined.Info,"About HAO","Reeldrop-inspired expressive workspace","https://github.com/chatpataprani/One-for-all")
             TextButton(onClick={Toast.makeText(context,"HAO settings saved locally",Toast.LENGTH_SHORT).show();onDismiss()},modifier=Modifier.fillMaxWidth()){Text("Done")}
         }

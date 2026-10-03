@@ -1,46 +1,60 @@
-const tools=[['🔎','Username Search','username'],['📧','Email OSINT','email'],['📞','Phone OSINT','phone'],['🌐','IP Intelligence','ip'],['🛰️','Domain Intelligence','domain'],['🔗','URL Scanner','url'],['🖼️','Image Metadata','image-meta'],['🧾','Document Metadata','doc-meta'],['🧬','Hash Analyzer','hash'],['📱','IMEI Check','imei'],['🪪','Aadhaar Test Lookup','aadhaar'],['🏦','IFSC Finder','ifsc'],['🚗','Vehicle Info','vehicle'],['🕵️','Stego Detector','stego'],['🔳','QR Analyzer','qr']];const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const app=document.querySelector('#app');
-function render(){app.innerHTML='<div class="shell"><header class="top"><div class="topbar"><div class="brand-lockup"><div class="mini-logo"><img src="./hao-logo.jpg" alt="HAO logo"></div><div><div class="brand">hao</div><div class="brand-sub">OSINT WORKSPACE</div></div></div><div class="nav"><button id="homeBtn" class="active">Home</button><button id="lookupBtn">DB Lab</button></div></div></header><main><section class="hero"><div class="card"><div class="eyebrow">HAO / open-source intelligence</div><h1>Find. Analyze.<br>Understand.</h1><p>A focused OSINT workspace for research, metadata analysis and synthetic test data. Everything stays inside the app.</p><div class="inputrow"><input id="quick" placeholder="search OSINT tools…"><button class="primary" id="search">find tool</button></div></div><div class="card"><div class="eyebrow">Workspace</div><h2>hao</h2><p class="muted">OSINT tools + Both-db test lab.</p><div class="stats"><div class="stat"><b>15</b><span>OSINT tools</span></div><div class="stat"><b>1</b><span>test lab</span></div><div class="stat"><b>0</b><span>external page opens</span></div></div><div class="warning">API credentials stay server-side. Never put the Both-db secret in browser JavaScript.</div></div></section><section class="section"><h2>Toolbox</h2><div class="muted">Open an OSINT module directly inside HAO.</div><div id="tools" class="tools"></div></section><section id="viewer" class="panel"></section><section class="footer">HAO · learning workspace by chatpataprani · in-app only</section></main></div>';drawTools(tools);document.querySelector('#lookupBtn').onclick=showDb;document.querySelector('#search').onclick=()=>filterTools(document.querySelector('#quick').value);document.querySelector('#quick').oninput=e=>filterTools(e.target.value);}
-function drawTools(list){document.querySelector('#tools').innerHTML=list.map(([i,n,p])=>'<button class="tool" data-path="'+p+'"><span class="icon">'+i+'</span><b>'+esc(n)+'</b><small>Open OSINT module</small></button>').join('');document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>openTool(b.dataset.path));}
-function drawScreens(list){document.querySelector('#screens').innerHTML=list.map(p=>'<button class="tool screen-tool" data-screen="'+esc(p)+'"><span class="icon">◫</span><b>'+esc(p.split('/').pop()==='index.html'?p.replace('/index.html',''):p)+'</b><small>Open internally</small></button>').join('');document.querySelectorAll('.screen-tool').forEach(b=>b.onclick=()=>openScreen(b.dataset.screen));}\nfunction openScreen(path){document.querySelector('#viewer').innerHTML='<div class="card module-card"><div class="eyebrow">internal source screen</div><h2>'+esc(path)+'</h2><p class="muted">This source screen is part of the One-for-all workspace. No external URL or page navigation is used.</p><div class="module-status"><span class="success-dot"></span>Internal route ready</div><div class="module-info"><div><b>Source path</b><span>'+esc(path)+'</span></div><div><b>Workspace</b><span>One-for-all</span></div><div><b>Navigation</b><span>in-app only</span></div></div></div>';document.querySelector('#viewer').scrollIntoView({behavior:'smooth'});}\nfunction filterTools(q){q=q.toLowerCase();drawTools(tools.filter(x=>x[1].toLowerCase().includes(q)||x[2].includes(q)));}
-function openTool(path){if(path==='aadhaar'){showDb('aadhar');return}const t=tools.find(x=>x[2]===path);const name=t?.[1]||path;document.querySelector('#viewer').innerHTML='<div class="card module-card"><div class="eyebrow">chatpataprani module</div><h2>'+esc(name)+'</h2><p class="muted">This tool is selected inside One-for-all. The workspace stays in-app; no external tool page is opened.</p><div class="module-status"><span class="success-dot"></span>Module ready</div><div class="module-info"><div><b>Module ID</b><span>'+esc(path)+'</span></div><div><b>Workspace</b><span>One-for-all</span></div><div><b>Brand</b><span>chatpataprani</span></div></div></div>';document.querySelector('#viewer').scrollIntoView({behavior:'smooth'});}
-function showDb(defaultKind='number'){document.querySelector('#viewer').innerHTML='<div class="card"><div class="eyebrow">Both-db direct API</div><h2>Number & Aadhaar Lookup</h2><p class="muted">These buttons call the supplied Both-db endpoints directly and render the returned JSON as a readable card.</p><div class="lookup-grid"><div class="lookup-box"><span class="lookup-icon">📞</span><h3>Number Lookup</h3><p class="muted">Calls <code>https://both-db.vercel.app/number=</code></p><input id="numberValue" value="TEST-0001" placeholder="synthetic number"><button class="primary lookup-btn" id="numberRun">Number Lookup</button></div><div class="lookup-box"><span class="lookup-icon">🪪</span><h3>Aadhaar Lookup</h3><p class="muted">Calls <code>https://both-db.vercel.app/aadhar=</code></p><input id="aadharValue" value="TEST-0001" placeholder="synthetic Aadhaar"><button class="primary lookup-btn" id="aadharRun">Aadhaar Lookup</button></div></div><div id="dbResult" class="result-card"><div class="result-empty">Choose a lookup button to view the returned data.</div></div></div>';document.querySelector('#numberRun').onclick=()=>runDirectLookup('number');document.querySelector('#aadharRun').onclick=()=>runDirectLookup('aadhar');if(defaultKind==='aadhar') document.querySelector('#aadharValue').focus();else document.querySelector('#numberValue').focus();document.querySelector('#viewer').scrollIntoView({behavior:'smooth'});}
-function displayValue(v){return v===null||v===undefined||v===''?'—':String(v)}
-function resultField(label,value,wide=false){return '<div class="result-item'+(wide?' field-wide':'')+'"><span>'+esc(label)+'</span><strong>'+esc(displayValue(value))+'</strong></div>'}
-function renderLookupResult(out,data,kind,value,status){
-  const results=Array.isArray(data?.results)?data.results:[];
-  const query=data?.number??data?.aadhar??value;
-  const state=data?.status==='success'?'success':'response';
-  const source='modihh ji';
-  const cards=results.map((item,i)=>'<article class="match-card"><div class="match-header"><div><span class="match-number">MATCH '+String(i+1).padStart(2,'0')+'</span><h3>'+esc(displayValue(item.name))+'</h3></div><span class="source-pill">'+source+'</span></div><div class="field-grid">'+
-    resultField('Father / Spouse',item.fathersName)+
-    resultField('Phone',item.phoneNumber)+
-    resultField('Aadhaar',item.aadharNumber)+
-    resultField('Other Number',item.otherNumber)+
-    resultField('District',item.district)+
-    resultField('Pincode',item.pincode)+
-    resultField('State',item.state)+
-    resultField('Town',item.town)+
-    resultField('Address',item.address,true)+
-    resultField('Source',source)+
-    '</div></article>').join('');
-  out.innerHTML='<div class="lookup-summary"><div><span class="result-badge">'+esc(String(kind).toUpperCase())+'</span><h3>Lookup result</h3><p>Query: <code>'+esc(query)+'</code></p></div><div class="summary-stats"><div><b>'+esc(data?.count??results.length)+'</b><span>matches</span></div><div><b>'+esc(data?.lookup_ms??'—')+(data?.lookup_ms!=null?' ms':'')+'</b><span>lookup time</span></div><div><b>'+esc(data?.credits_used??'—')+'</b><span>credits</span></div></div></div>'+
-    '<div class="result-meta"><span class="success-dot"></span>'+esc(state)+' · HTTP '+status+' · developer: '+esc(data?.developer??'—')+' · source: '+source+'</div>'+
-    (cards||'<div class="result-empty">No matching records returned.</div>')+
-    '<details class="raw-json"><summary>View raw JSON</summary><pre>'+esc(JSON.stringify(data,null,2))+'</pre></details>';
-}
-async function runDirectLookup(kind){
-  const input=document.querySelector(kind==='number'?'#numberValue':'#aadharValue');
-  const out=document.querySelector('#dbResult');
+const state={kind:"number"};
+const form=document.getElementById("searchForm");
+const input=document.getElementById("value");
+const label=document.getElementById("inputLabel");
+const status=document.getElementById("status");
+const result=document.getElementById("result");
+const button=document.getElementById("searchBtn");
+
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    state.kind=tab.dataset.kind;
+    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===tab));
+    const aadhaar=state.kind==="aadhar";
+    label.textContent=aadhaar?"Aadhaar":"Number";
+    input.placeholder=aadhaar?"Enter test Aadhaar":"Enter test number";
+    input.inputMode=aadhaar?"numeric":"tel";
+    input.value="";
+    status.textContent="";
+    result.classList.add("hidden");
+  });
+});
+
+form.addEventListener("submit",async e=>{
+  e.preventDefault();
   const value=input.value.trim();
-  if(!value){out.innerHTML='<div class="result-error">Enter a synthetic test value first.</div>';return}
-    const r=await fetch('/api/lookup',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify({kind,value})});
-    const text=await r.text();
-    let data; try{data=JSON.parse(text)}catch{data={raw:text}}
-    if(!r.ok) throw new Error('HTTP '+r.status+' — '+(data?.message||data?.error||'request failed'));
-    renderLookupResult(out,data,kind,value,r.status);
-  }catch(e){
-    out.innerHTML='<div class="result-error"><strong>Lookup failed</strong><span>'+esc(e.message)+'</span><small>If the browser blocks the direct request, enable CORS on Both-db for this site.</small></div>';
-  }
+  if(!value)return;
+  button.disabled=true;
+  status.className="status";
+  status.textContent="Searching…";
+  result.classList.add("hidden");
+  try{
+    const res=await fetch("/api/lookup",{
+      method:"POST",
+      headers:{"content-type":"application/json","accept":"application/json"},
+      body:JSON.stringify({kind:state.kind,value})
+    });
+    const data=await res.json().catch(()=>({error:"Invalid JSON response"}));
+    if(!res.ok)throw new Error(data.message||data.error||`HTTP ${res.status}`);
+    render(data);
+    status.textContent="Search complete";
+  }catch(err){
+    status.className="status error";
+    status.textContent=err.message||"Search failed";
+  }finally{button.disabled=false}
+});
+
+function esc(v){
+  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
-render();
+function render(data){
+  const rows=Array.isArray(data.results)?data.results:[];
+  const cards=rows.map((r,i)=>`<article class="card">
+    <div class="meta"><span>Result ${i+1}</span><span>source: modihh ji</span></div>
+    <div class="grid">${Object.entries(r).map(([k,v])=>`<div class="field"><b>${esc(k)}</b><span>${esc(v===null?"null":v)}</span></div>`).join("")}</div>
+  </article>`).join("");
+  result.innerHTML=`<div class="meta"><span>${esc(data.type||state.kind)} lookup</span><span>${esc(data.count??rows.length)} result(s)</span></div>
+    ${cards||'<div class="card">No results returned.</div>'}
+    <details class="raw"><summary>Raw API response</summary><pre>${esc(JSON.stringify(data,null,2))}</pre></details>`;
+  result.classList.remove("hidden");
+}

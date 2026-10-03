@@ -1,23 +1,29 @@
-# HAO
+# HAO — API Search
 
-A learning-focused **OSINT workspace** by **chatpataprani**.
+A small HAO app that searches the provided **test/learning Both-db API**.
 
-## App direction
-- App name: **HAO**
-- Full uploaded square logo is bundled as `hao-logo.jpg` with all four corners preserved.
-- OSINT-style modules stay inside the HAO workspace.
-- No external tool-page redirects or iframes.
-- Responsive dark UI with app-style navigation and mobile bottom navigation.
+## API endpoints
+- Number: https://both-db.vercel.app/number=
+- Aadhaar: https://both-db.vercel.app/aadhar=
 
-## Modules
-Username Search, Email OSINT, Phone OSINT, IP Intelligence, Domain Intelligence, URL Scanner, Image Metadata, Document Metadata, Hash Analyzer, IMEI Check, Aadhaar Test Lookup, IFSC Finder, Vehicle Info, Stego Detector and QR Analyzer.
+The browser calls `/api/lookup`, and the server calls Both-db. A future API key can therefore stay in a server environment variable.
 
-## Both-db test lab
-The supplied fake/test Both-db API remains available inside **DB Lab**:
-- Number: `https://both-db.vercel.app/number=`
-- Aadhaar: `https://both-db.vercel.app/aadhar=`
+## Run locally
+Requires Node.js 18+.
 
-Use synthetic/test identifiers while learning. If the browser reports a CORS error, the Both-db deployment must allow requests from the HAO origin.
+```bash
+npm start
+```
 
-## Build
-Reproducible static/PWA build via `npm run build` and GitHub Actions. The build includes the HAO logo asset.
+Open http://localhost:3000
+
+## Vercel
+Import this repository into Vercel. No build command is required.
+
+Optional environment variables:
+- `BOTH_DB_API_URL=https://both-db.vercel.app`
+- `BOTH_DB_NUMBER_PATH=/number=`
+- `BOTH_DB_AADHAAR_PATH=/aadhar=`
+- `BOTH_DB_API_KEY=...` only if required later.
+
+Use synthetic/test identifiers only.

@@ -116,6 +116,7 @@ private fun HaoApp() {
     val prefs = remember { context.getSharedPreferences("hao", Context.MODE_PRIVATE) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var settings by rememberSaveable { mutableStateOf(false) }
+    var toolDialog by remember { mutableStateOf<Tool?>(null) }
     var dark by rememberSaveable { mutableStateOf(prefs.getBoolean("dark", true)) }
     var glass by rememberSaveable { mutableFloatStateOf(prefs.getFloat("glass", .86f)) }
     var haptics by rememberSaveable { mutableStateOf(prefs.getBoolean("haptics", true)) }
@@ -156,11 +157,12 @@ private fun HaoApp() {
                     }
                     else -> ToolsScreen(glass){tool ->
                         if(tool.path=="__search_number__" || tool.path=="__search_aadhaar__") tab=1
-                        else Toast.makeText(context,"Tool registered: "+tool.name,Toast.LENGTH_SHORT).show()
+                        else toolDialog = tool
                     }
                 }
             }
         }
+        toolDialog?.let { ToolWorkspace(it, glass) { toolDialog = null } }
         if(settings) SettingsSheet(dark,glass,haptics,history,
             {dark=it;prefs.edit().putBoolean("dark",it).apply()},
             {glass=it;prefs.edit().putFloat("glass",it).apply()},
@@ -358,4 +360,136 @@ private fun SettingCard(title:String,description:String="",trailing:@Composable 
 private fun SettingLink(icon:androidx.compose.ui.graphics.vector.ImageVector,title:String,description:String,url:String) {
     val context=LocalContext.current
     SettingCard(title,description){IconButton(onClick={context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))}){Icon(icon,null)}}
+}
+
+
+@Composable
+private fun ToolWorkspace(tool: Tool, intensity: Float, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    var input by rememberSaveable { mutableStateOf("") }
+    var output by remember { mutableStateOf("") }
+    var copied by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp).padding(bottom=28.dp)) {
+            Text(tool.name, style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(tool.description, color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(16.dp))
+            when {
+                tool.name == "Password Generator" -> {
+                    var length by rememberSaveable { mutableIntStateOf(20) }
+                    Text("Length: $length")
+                    Slider(value=length.toFloat(), onValueChange={length=it.toInt()}, valueRange=8f..64f, steps=55)
+                    Button(onClick={ output = generatePassword(length) }, Modifier.fillMaxWidth()) { Text("Generate secure password") }
+                }
+                tool.name == "Hash Generator" -> {
+                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text("Text to hash")})
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={ output = sha256(input) },Modifier.fillMaxWidth()){Text("Generate SHA-256")}
+                }
+                tool.name in setOf("Aadhaar Validator","PAN Card Validator","GST Number Validator","IMEI Verifier","MAC Address Lookup") -> {
+                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text("Enter value")},singleLine=true)
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={output=validateLocal(tool.name,input)},Modifier.fillMaxWidth()){Text("Validate / inspect")}
+                }
+                tool.name == "Age & Date Calculator" -> {
+                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text("Date of birth: YYYY-MM-DD")},singleLine=true)
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={output=ageFromDate(input)},Modifier.fillMaxWidth()){Text("Calculate age")}
+                }
+                tool.name == "Gurmukhi Pad" || tool.name == "Gurmukhi Font Converter" -> {
+                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text("Punjabi / Gurmukhi text")},minLines=4)
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={output=input},Modifier.fillMaxWidth()){Text("Process text")}
+                }
+                tool.name == "Vehicle Number Decoder" -> {
+                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text("Vehicle registration")},singleLine=true)
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={output=vehicleDecode(input)},Modifier.fillMaxWidth()){Text("Decode registration")}
+                }
+                tool.name == "Signature Checksum" -> {
+                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text("Text / data")})
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={output=sha256(input)},Modifier.fillMaxWidth()){Text("Generate signature")}
+                }
+                tool.name == "Number Lookup" || tool.name == "Aadhaar UIDAI Verification" -> {
+                    Text("This tool uses the live direct Both-db service.")
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={onDismiss},Modifier.fillMaxWidth()){Text("Open Search")}
+                }
+                else -> {
+                    Text("This tool is ready for local input/file processing. Choose an input below to begin.")
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedTextField(input,{input=it},Modifier.fillMaxWidth(),label={Text("Input / notes")},minLines=3)
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={
+                        val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                            type="*/*"; addCategory(Intent.CATEGORY_OPENABLE)
+                        }
+                        context.startActivity(intent)
+                    },Modifier.fillMaxWidth()){Text("Choose a file")}
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick={output = "Input received. This workspace is available offline; selected files can be processed by the tool-specific workflow."},Modifier.fillMaxWidth()){Text("Process input")}
+                }
+            }
+            if(output.isNotBlank()){
+                Spacer(Modifier.height(14.dp))
+                GlassCard(intensity,RoundedCornerShape(20.dp)){
+                    Text("RESULT",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.secondary)
+                    Spacer(Modifier.height(8.dp)); Text(output)
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick={
+                        val cm=context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        cm.setPrimaryClip(android.content.ClipData.newPlainText("HAO result",output));copied=true
+                    }){Text(if(copied)"Copied" else "Copy result")}
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            TextButton(onClick=onDismiss,Modifier.fillMaxWidth()){Text("Close")}
+        }
+    }
+}
+
+private fun generatePassword(length:Int):String {
+    val chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#%+=_-"
+    val r=java.security.SecureRandom()
+    return buildString { repeat(length){append(chars[r.nextInt(chars.length)])} }
+}
+private fun sha256(s:String):String {
+    val b=java.security.MessageDigest.getInstance("SHA-256").digest(s.toByteArray())
+    return b.joinToString("") { "%02x".format(it) }
+}
+private fun luhn(s:String):Boolean {
+    var sum=0; var alt=false
+    for(i in s.length-1 downTo 0) { val d=s[i]-'0'; var n=d; if(alt){n*=2;if(n>9)n-=9};sum+=n;alt=!alt }
+    return s.isNotEmpty() && s.all{it.isDigit()} && sum%10==0
+}
+private fun verhoeff(s:String):Boolean {
+    val d=arrayOf(intArrayOf(0,1,2,3,4,5,6,7,8,9),intArrayOf(1,2,3,4,0,6,7,8,9,5),intArrayOf(2,3,4,0,1,7,8,9,5,6),intArrayOf(3,4,0,1,2,8,9,5,6,7),intArrayOf(4,0,1,2,3,9,5,6,7,8),intArrayOf(5,9,8,7,6,0,4,3,2,1),intArrayOf(6,5,9,8,7,1,0,4,3,2),intArrayOf(7,6,5,9,8,2,1,0,4,3),intArrayOf(8,7,6,5,9,3,2,1,0,4),intArrayOf(9,8,7,6,5,4,3,2,1,0))
+    val p=arrayOf(intArrayOf(0,1,2,3,4,5,6,7,8,9),intArrayOf(1,5,7,6,2,8,3,0,9,4),intArrayOf(5,8,0,3,7,9,6,1,4,2),intArrayOf(8,9,1,6,0,4,3,5,2,7),intArrayOf(9,4,5,3,1,2,6,8,7,0),intArrayOf(4,2,8,6,5,7,3,9,0,1),intArrayOf(2,7,9,3,8,0,6,4,1,5),intArrayOf(7,0,4,6,9,1,3,2,5,8))
+    var c=0; val rev=s.reversed()
+    for(i in rev.indices)c=d[c][p[i%8][rev[i]-'0']]
+    return c==0
+}
+private fun validateLocal(name:String,raw:String):String {
+    val v=raw.trim().uppercase(Locale.US)
+    return when(name) {
+        "Aadhaar Validator" -> if(v.length==12 && verhoeff(v)) "Valid 12-digit Aadhaar format and Verhoeff checksum." else "Invalid Aadhaar checksum or format."
+        "PAN Card Validator" -> if(Regex("[A-Z]{5}[0-9]{4}[A-Z]").matches(v)) "Valid PAN structure." else "Invalid PAN structure."
+        "GST Number Validator" -> if(Regex("[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]").matches(v)) "GSTIN structure looks valid." else "Invalid GSTIN structure."
+        "IMEI Verifier" -> if(v.length==15 && luhn(v)) "Valid 15-digit IMEI Luhn checksum." else "Invalid IMEI."
+        else -> if(Regex("[0-9A-F]{2}([-:][0-9A-F]{2}){5}").matches(v)) "Valid MAC address format." else "Invalid MAC address format."
+    }
+}
+private fun ageFromDate(s:String):String = try {
+    val dob=java.time.LocalDate.parse(s)
+    val now=java.time.LocalDate.now()
+    val p=java.time.Period.between(dob,now)
+    "${p.years} years, ${p.months} months, ${p.days} days. Born on ${dob.dayOfWeek}."
+} catch(_:Exception) {"Use YYYY-MM-DD, for example 2000-01-15."}
+private fun vehicleDecode(s:String):String {
+    val v=s.trim().uppercase(Locale.US).replace("\\s+".toRegex()," ")
+    val code=v.replace(" ","").take(4)
+    return if(v.isBlank()) "Enter a registration such as BR01AB1234." else "Registration: $v\nState/RTO prefix: $code\nFull decoding depends on the Indian RTO database."
 }

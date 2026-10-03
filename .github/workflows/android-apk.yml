@@ -15,7 +15,7 @@ jobs:
       - name: Bundle supplied tools ZIP
         run: |
           rm -rf /tmp/punjab
-          git clone --depth 1 https://github.com/PBhadoo/punjab.pages.dev.git /tmp/punjab
+          git clone --depth 1 https://github.com/PBhadoo/punjab.pages.dev.git /tmp/punjab.pages.dev-main
           mkdir -p android/app/src/main/assets
           cd /tmp
           zip -qr "$GITHUB_WORKSPACE/android/app/src/main/assets/tools-bundle.zip" punjab

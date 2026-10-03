@@ -1,4 +1,7 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 
 android {
     namespace 'com.chatpataprani.hao'
@@ -7,7 +10,7 @@ android {
         applicationId 'com.chatpataprani.hao'
         minSdk 23
         targetSdk 35
-        versionCode 3
-        versionName '2.0'
+        versionCode 4
+        versionName '3.0'
     }
 }

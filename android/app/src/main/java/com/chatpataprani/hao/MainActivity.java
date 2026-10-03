@@ -192,7 +192,7 @@ public class MainActivity extends Activity {
         box.addView(b,p); if(action!=null)b.setOnClickListener(v->action.run());
     }
 
-    Button action(String text){ Button b=new Button(this); b.setText(text); b.setTextSize(12); b.setAllCaps(false); b.setTextColor(WHITE); b.setBackground(bg(PANEL,12)); return b; }
+
 
     void open(String url){
         try{ startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }catch(Exception ignored){}

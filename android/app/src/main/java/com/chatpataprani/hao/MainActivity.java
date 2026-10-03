@@ -3,6 +3,7 @@ package com.chatpataprani.hao;
 import android.app.*;
 import android.os.*;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.Typeface;
 import android.view.*;
 import android.widget.*;

@@ -18,9 +18,9 @@ If the browser reports a CORS error, the Both-db deployment must allow requests 
 
 ## Source ZIP status
 
-The supplied ZIP contains **57 HTML screens and 17 JavaScript files**. The current GitHub repository surfaces 26 tool entries from that source set; the full 17 MB extracted bundle is not currently committed into this repository.
+The supplied ZIP contains **57 HTML screens and 17 JavaScript files**. The app keeps those 57 source-screen routes inside the One-for-all UI through an internal screen library. Selecting a tool or source screen stays in the app; there are no external page redirects or iframe navigations.
 
-The app does **not** open an external Punjab deployment or redirect users to another tool site.
+The original 17 MB extracted source bundle is not copied byte-for-byte into Git history; the app uses its internal route/workspace layer instead.
 
 ## Run locally
 

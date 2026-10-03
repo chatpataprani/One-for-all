@@ -1,3 +1,10 @@
 {
-  "functions":{"api/lookup.js":{"runtime":"nodejs20.x"}}
+  "git": {
+    "deploymentEnabled": false
+  },
+  "functions": {
+    "api/lookup.js": {
+      "runtime": "nodejs24.x"
+    }
+  }
 }

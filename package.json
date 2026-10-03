@@ -1,0 +1,7 @@
+{
+  "name":"one-for-all",
+  "version":"1.0.0",
+  "private":true,
+  "type":"module",
+  "scripts":{"build":"node scripts/build.mjs"}
+}

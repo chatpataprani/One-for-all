@@ -21,27 +21,14 @@ HAO is a glass-style Android toolkit by **Chatpataprani** for identifier lookup,
 
 ## Build
 
-Requirements:
-
-- Android SDK 35
-- JDK 17
-- Gradle 8.9+
-
-Build the debug APK:
+Requirements: Android SDK 35, JDK 17, Gradle 8.9+.
 
 ```bash
 cd android
 gradle assembleDebug
 ```
 
-The APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`.
-
-## Source layout
-
-- `android/app/src/main/java/com/chatpataprani/hao/` — Android source
-- `android/app/src/main/AndroidManifest.xml` — app manifest
-- `.github/workflows/build.yml` — Android CI build
-- `README.md` — project documentation
+APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 ## Privacy
 

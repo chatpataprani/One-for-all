@@ -38,7 +38,9 @@ def prepareHaoIcon = tasks.register("prepareHaoIcon") {
 }
 
 tasks.configureEach {
-    if (name.startsWith("merge") && name.endsWith("Resources")) {
+    if ((name.startsWith("merge") && name.endsWith("Resources"))
+        || (name.startsWith("generate") && name.endsWith("Resources"))
+        || name.startsWith("mapDebugSourceSetPaths")) {
         dependsOn(prepareHaoIcon)
     }
 }

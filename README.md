@@ -4,7 +4,7 @@ A learning-focused **OSINT workspace** by **chatpataprani**.
 
 ## App direction
 - App name: **HAO**
-- Full uploaded square logo is bundled as `hao-logo.svg` with all four corners preserved.
+- Full uploaded square logo is bundled as `hao-logo.jpg` with all four corners preserved.
 - OSINT-style modules stay inside the HAO workspace.
 - No external tool-page redirects or iframes.
 - Responsive dark UI with app-style navigation and mobile bottom navigation.

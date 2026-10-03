@@ -33,6 +33,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -126,13 +128,29 @@ private fun HaoApp() {
     var haptics by rememberSaveable { mutableStateOf(prefs.getBoolean("haptics", true)) }
     var history by remember { mutableStateOf(prefs.getStringSet("history", emptySet())?.toList()?.reversed() ?: emptyList()) }
     val scheme = if (dark) darkColorScheme(
-        background=Color(7,9,14), surface=Color(18,21,29), surfaceVariant=Color(30,34,44),
-        primary=Color(224,231,255), secondary=Color(177,195,255)
+        background=Color(8,10,16), surface=Color(16,19,27), surfaceVariant=Color(27,31,41),
+        primary=Color(226,232,255), secondary=Color(168,190,255),
+        onBackground=Color(242,244,250), onSurface=Color(242,244,250)
     ) else lightColorScheme(
-        background=Color(241,244,250), surface=Color(250,251,255), surfaceVariant=Color(231,235,244),
-        primary=Color(54,72,125), secondary=Color(79,96,145)
+        background=Color(235,239,247), surface=Color(247,249,253), surfaceVariant=Color(224,229,239),
+        primary=Color(46,61,108), secondary=Color(68,87,145),
+        onBackground=Color(25,29,38), onSurface=Color(25,29,38)
     )
-    MaterialTheme(colorScheme=scheme) {
+    val type = Typography(
+        displayLarge=MaterialTheme.typography.displayLarge.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.Bold),
+        headlineLarge=MaterialTheme.typography.headlineLarge.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.Bold),
+        headlineMedium=MaterialTheme.typography.headlineMedium.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.Bold),
+        headlineSmall=MaterialTheme.typography.headlineSmall.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.SemiBold),
+        titleLarge=MaterialTheme.typography.titleLarge.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.SemiBold),
+        titleMedium=MaterialTheme.typography.titleMedium.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.SemiBold),
+        bodyLarge=MaterialTheme.typography.bodyLarge.copy(fontFamily=FontFamily.SansSerif),
+        bodyMedium=MaterialTheme.typography.bodyMedium.copy(fontFamily=FontFamily.SansSerif),
+        bodySmall=MaterialTheme.typography.bodySmall.copy(fontFamily=FontFamily.SansSerif),
+        labelLarge=MaterialTheme.typography.labelLarge.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.SemiBold),
+        labelMedium=MaterialTheme.typography.labelMedium.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.Medium),
+        labelSmall=MaterialTheme.typography.labelSmall.copy(fontFamily=FontFamily.SansSerif, fontWeight=FontWeight.Medium)
+    )
+    MaterialTheme(colorScheme=scheme, typography=type) {
         Scaffold(
             containerColor=Color.Transparent,
             topBar={
@@ -152,7 +170,9 @@ private fun HaoApp() {
                 }
             }
         ){pad ->
-            Box(Modifier.fillMaxSize().padding(pad)) {
+            Box(Modifier.fillMaxSize()
+                    .background(Brush.radialGradient(if (dark) listOf(Color(28,34,54),Color(8,10,16)) else listOf(Color(255,255,255),Color(235,239,247))))
+                    .padding(pad)) {
                 when(tab) {
                     0 -> HomeScreen(glass,{tab=1},{tab=2},history,{tab=1})
                     1 -> SearchScreen(glass,haptics,history){newList ->
@@ -206,7 +226,7 @@ private fun HomeScreen(intensity:Float,onSearch:()->Unit,onTools:()->Unit,histor
         GlassCard(intensity,Modifier.padding(bottom=12.dp)) {
             Text("LOOKUP",style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.secondary)
             Spacer(Modifier.height(8.dp));Text("Number & Aadhaar",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
-            Text("Direct API mode is enabled so HAO works without the Vercel proxy.",color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Fast identifier lookup with clean, structured results.",color=MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp));Button(onClick=onSearch,modifier=Modifier.fillMaxWidth().height(52.dp)){Icon(Icons.Outlined.Search,null);Spacer(Modifier.width(8.dp));Text("Open search")}
         }
         GlassCard(intensity,Modifier.padding(bottom=12.dp)) {
@@ -233,19 +253,22 @@ private fun HomeScreen(intensity:Float,onSearch:()->Unit,onTools:()->Unit,histor
 private fun ToolsScreen(intensity:Float,onOpen:(Tool)->Unit) {
     var filter by rememberSaveable{mutableStateOf("")}
     var category by rememberSaveable{mutableStateOf("All")}
-    val categories=listOf("All")+tools.map{it.name.substringBefore(" ")}.distinct()
-    val shown=tools.filter{filter.isBlank() || it.name.contains(filter,true) || it.description.contains(filter,true)}
+    val categories=listOf("All","Security","Files","Images","PDF","Network","Text","Identity")
+    val shown=tools.filter{(filter.isBlank() || it.name.contains(filter,true) || it.description.contains(filter,true)) && (category=="All" || toolCategory(it.name)==category)}
     Column(Modifier.fillMaxSize().padding(horizontal=14.dp)) {
         SectionTitle("All tools","Every tool is a glass box with its name, purpose and open action.")
         OutlinedTextField(value=filter,onValueChange={filter=it},singleLine=true,placeholder={Text("Find a tool…")},leadingIcon={Icon(Icons.Outlined.Search,null)},modifier=Modifier.fillMaxWidth().padding(bottom=8.dp))
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(bottom=10.dp)) {
-            categories.take(10).forEach { chip -> FilterChip(selected=category==chip,onClick={category=chip},label={Text(chip)},modifier=Modifier.padding(end=6.dp)) }
+            categories.forEach { chip -> FilterChip(selected=category==chip,onClick={category=chip},label={Text(chip)},modifier=Modifier.padding(end=6.dp)) }
         }
         LazyVerticalGrid(columns=GridCells.Adaptive(minSize=155.dp),contentPadding=PaddingValues(bottom=18.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             items(shown,key={it.name}) { tool ->
                 GlassCard(intensity,Modifier.heightIn(min=170.dp),RoundedCornerShape(22.dp)) {
-                    Text(tool.name.uppercase(Locale.US),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.secondary,fontWeight=FontWeight.Bold,maxLines=2)
-                    Spacer(Modifier.height(8.dp));Text(tool.name,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
+                    Row(verticalAlignment=Alignment.CenterVertically) {
+                        Icon(toolIcon(tool.name),null,tint=MaterialTheme.colorScheme.secondary,modifier=Modifier.size(22.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Text(tool.name,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold,maxLines=2)
+                    }
                     Spacer(Modifier.height(6.dp));Text(tool.description,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=4)
                     Spacer(Modifier.weight(1f));TextButton(onClick={onOpen(tool)}){Text("Open  →")}
                 }
@@ -302,7 +325,7 @@ private suspend fun performLookup(mode:String,value:String):Pair<String,String> 
     }
     return try {
         val c=URL(endpoint).openConnection() as HttpURLConnection
-        c.requestMethod="GET";c.connectTimeout=15000;c.readTimeout=20000
+        c.requestMethod="GET";c.useCaches=false;c.connectTimeout=4500;c.readTimeout=6500;c.setRequestProperty("Accept","application/json")
         val code=c.responseCode
         val stream=if(code>=400)c.errorStream else c.inputStream
         val body=stream?.bufferedReader()?.use{it.readText()}?:""
@@ -338,15 +361,21 @@ private fun SettingsSheet(dark:Boolean,glass:Float,haptics:Boolean,history:List<
             Text("Settings",style=MaterialTheme.typography.headlineMedium,fontWeight=FontWeight.Bold)
             Text("Personalize your HAO workspace.",color=MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
-            SettingCard("Appearance","Dark glass theme"){Switch(checked=dark,onCheckedChange=onDark)}
-            SettingCard("Glass intensity","Control card translucency"){Slider(value=glass,onValueChange=onGlass,valueRange=.55f..1f)}
-            SettingCard("Haptics","Subtle feedback on search"){Switch(checked=haptics,onCheckedChange=onHaptics)}
+            Text("Appearance",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold,modifier=Modifier.padding(vertical=8.dp))
+            SettingCard("Dark theme","Low-glare dark surface"){Switch(checked=dark,onCheckedChange=onDark)}
+            SettingCard("Glass intensity","Lower values reduce glow"){Slider(value=glass,onValueChange=onGlass,valueRange=.45f..0.9f)}
+            SettingCard("Haptics","Subtle feedback on actions"){Switch(checked=haptics,onCheckedChange=onHaptics)}
+            Text("Data & search",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=14.dp,bottom=8.dp))
             SettingCard("Search history",history.size.toString()+" local entries"){TextButton(onClick=onClear,enabled=history.isNotEmpty()){Text("Clear")}}
+            SettingCard("Network","Requests stop quickly when the service is slow."){}
             SettingLink(Icons.Outlined.Code,"GitHub","Open the HAO project","https://github.com/chatpataprani/One-for-all")
             SettingLink(Icons.Outlined.CameraAlt,"Instagram","@chatpataprani","https://instagram.com/chatpataprani")
-            SettingCard("Privacy","HAO uses the configured Both-db API directly. No Vercel backend is required."){}
-            SettingCard("Developer","Chatpataprani"){ Text("Version 4.0 • "+tools.size.toString()+" tools") }
-            SettingLink(Icons.Outlined.Info,"About HAO","Reeldrop-inspired expressive workspace","https://github.com/chatpataprani/One-for-all")
+            SettingCard("Privacy","Inputs are used only for the action you start. HAO does not ask for UIDAI OTPs."){}
+            SettingCard("Developer","Chatpataprani"){ Text("Version 4.2 • "+tools.size.toString()+" tools") }
+            SettingCard("Toolkit",tools.size.toString()+" named tools"){Text("Ready",color=MaterialTheme.colorScheme.secondary,fontWeight=FontWeight.SemiBold)}
+            SettingCard("Offline","Validation, hashing, passwords and date math run on-device"){}
+            SettingCard("Online","Lookup and official service handoffs require internet"){}
+            SettingLink(Icons.Outlined.Info,"About HAO","Glass toolkit by Chatpataprani","https://github.com/chatpataprani/One-for-all")
             TextButton(onClick={Toast.makeText(context,"HAO settings saved locally",Toast.LENGTH_SHORT).show();onDismiss()},modifier=Modifier.fillMaxWidth()){Text("Done")}
         }
     }
@@ -419,7 +448,7 @@ private fun ToolWorkspace(tool: Tool, intensity: Float, onDismiss: () -> Unit) {
                     Button(onClick={output=sha256(input)},Modifier.fillMaxWidth()){Text("Generate signature")}
                 }
                 tool.name == "Number Lookup" -> {
-                    Text("Number lookup uses the live direct Both-db service.")
+                    Text("Open the fast number lookup screen.")
                     Spacer(Modifier.height(10.dp))
                     Button(onClick={onDismiss},Modifier.fillMaxWidth()){Text("Open Number Search")}
                 }

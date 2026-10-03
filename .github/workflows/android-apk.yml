@@ -6,6 +6,8 @@ on:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      HAO_BACKEND_URL: ${{ secrets.HAO_BACKEND_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

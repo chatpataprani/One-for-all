@@ -366,6 +366,7 @@ private fun SettingLink(icon:androidx.compose.ui.graphics.vector.ImageVector,tit
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ToolWorkspace(tool: Tool, intensity: Float, onDismiss: () -> Unit) {
     val context = LocalContext.current

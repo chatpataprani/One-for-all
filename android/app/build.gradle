@@ -3,6 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+def haoBackendUrl = System.getenv("HAO_BACKEND_URL") ?: ""
+
 android {
     namespace 'com.chatpataprani.hao'
     compileSdk 35
@@ -13,6 +15,6 @@ android {
         targetSdk 35
         versionCode 4
         versionName '3.0'
-        buildConfigField 'String', 'BACKEND_URL', '""'
+        buildConfigField 'String', 'BACKEND_URL', '"' + haoBackendUrl.replace('"', '\\\"') + '"'
     }
 }

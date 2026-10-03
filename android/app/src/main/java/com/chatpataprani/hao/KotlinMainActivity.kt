@@ -483,10 +483,13 @@ private fun validateLocal(name:String,raw:String):String {
     }
 }
 private fun ageFromDate(s:String):String = try {
-    val dob=java.time.LocalDate.parse(s)
-    val now=java.time.LocalDate.now()
-    val p=java.time.Period.between(dob,now)
-    "${p.years} years, ${p.months} months, ${p.days} days. Born on ${dob.dayOfWeek}."
+    val parts=s.trim().split("-")
+    require(parts.size==3)
+    val dob=java.util.Calendar.getInstance().apply { clear(); set(parts[0].toInt(),parts[1].toInt()-1,parts[2].toInt()) }
+    val now=java.util.Calendar.getInstance()
+    var years=now.get(java.util.Calendar.YEAR)-dob.get(java.util.Calendar.YEAR)
+    if(now.get(java.util.Calendar.DAY_OF_YEAR)<dob.get(java.util.Calendar.DAY_OF_YEAR)) years--
+    "Age: $years years. Born: ${parts[0]}-${parts[1]}-${parts[2]}."
 } catch(_:Exception) {"Use YYYY-MM-DD, for example 2000-01-15."}
 private fun vehicleDecode(s:String):String {
     val v=s.trim().uppercase(Locale.US).replace("\\s+".toRegex()," ")

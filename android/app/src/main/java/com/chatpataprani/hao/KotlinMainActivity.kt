@@ -371,7 +371,7 @@ private fun SettingsSheet(dark:Boolean,glass:Float,haptics:Boolean,history:List<
             SettingLink(Icons.Outlined.Code,"GitHub","Open the HAO project","https://github.com/chatpataprani/One-for-all")
             SettingLink(Icons.Outlined.CameraAlt,"Instagram","@chatpataprani","https://instagram.com/chatpataprani")
             SettingCard("Privacy","Inputs are used only for the action you start. HAO does not ask for UIDAI OTPs."){}
-            SettingCard("Developer","Chatpataprani"){ Text("Version 4.2 • "+tools.size.toString()+" tools") }
+            SettingCard("Developer","Chatpataprani"){ Text("Version 4.4 • "+tools.size.toString()+" tools") }
             SettingCard("Toolkit",tools.size.toString()+" named tools"){Text("Ready",color=MaterialTheme.colorScheme.secondary,fontWeight=FontWeight.SemiBold)}
             SettingCard("Offline","Validation, hashing, passwords and date math run on-device"){}
             SettingCard("Online","Lookup and official service handoffs require internet"){}

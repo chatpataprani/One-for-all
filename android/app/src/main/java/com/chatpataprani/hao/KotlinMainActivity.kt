@@ -417,10 +417,29 @@ private fun ToolWorkspace(tool: Tool, intensity: Float, onDismiss: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     Button(onClick={output=sha256(input)},Modifier.fillMaxWidth()){Text("Generate signature")}
                 }
-                tool.name == "Number Lookup" || tool.name == "Aadhaar UIDAI Verification" -> {
-                    Text("This tool uses the live direct Both-db service.")
+                tool.name == "Number Lookup" -> {
+                    Text("Number lookup uses the live direct Both-db service.")
                     Spacer(Modifier.height(10.dp))
-                    Button(onClick={onDismiss},Modifier.fillMaxWidth()){Text("Open Search")}
+                    Button(onClick={onDismiss},Modifier.fillMaxWidth()){Text("Open Number Search")}
+                }
+                tool.name == "Aadhaar UIDAI Verification" -> {
+                    Text("Use HAO for local format checking and direct lookup, or open the official UIDAI portal for OTP-based services.")
+                    Spacer(Modifier.height(10.dp))
+                    GlassCard(intensity, Modifier.fillMaxWidth(), RoundedCornerShape(20.dp)) {
+                        Text("OFFICIAL UIDAI OTP", fontWeight=FontWeight.Bold, color=MaterialTheme.colorScheme.secondary)
+                        Spacer(Modifier.height(6.dp))
+                        Text("OTP is entered only on UIDAI's official website. HAO does not request, read, or store your OTP.", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.height(10.dp))
+                        Button(onClick={
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://myaadhaar.uidai.gov.in/")))
+                        }, Modifier.fillMaxWidth()) { Text("Open UIDAI Portal") }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick={onDismiss},Modifier.fillMaxWidth()){Text("Open HAO Aadhaar Search")}
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick={
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://myaadhaar.uidai.gov.in/offline-ekyc")))
+                    }, Modifier.fillMaxWidth()) { Text("UIDAI Offline e-KYC / OTP") }
                 }
                 else -> {
                     Text("This tool is ready for local input/file processing. Choose an input below to begin.")

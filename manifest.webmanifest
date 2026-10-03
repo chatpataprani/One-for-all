@@ -1,6 +1,6 @@
 {
-  "name":"HAO — OSINT Workspace",
-  "short_name":"HAO",
+  "name":"hao — OSINT Workspace",
+  "short_name":"hao",
   "start_url":"./",
   "display":"standalone",
   "background_color":"#07090d",
